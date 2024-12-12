@@ -22,9 +22,11 @@ import textwrap
 import time
 import shutil
 import sys
+import ipaddress
 import yaml
 
 from gateway_ping_test import ping
+from checkbox_support.snap_utils.system import get_series
 
 print = functools.partial(print, flush=True)
 
@@ -169,12 +171,16 @@ def generate_test_config(interface, ssid, psk, address, dhcp, wpa3, renderer):
     access_point = {ssid: {}}
     # If psk is provided, add it to the "auth" section
     if psk:
-        access_point[ssid] = {"auth": {"password": psk}}
-        # Set the key-management to "sae" when WPA3 is used
-        if wpa3:
-            access_point[ssid]["auth"]["key-management"] = "sae"
+        ubuntu_version = int(get_series().split(".")[0])
+        if ubuntu_version == 16:
+            access_point[ssid] = {"password": psk}
         else:
-            access_point[ssid]["auth"]["key-management"] = "psk"
+            access_point[ssid] = {"auth": {"password": psk}}
+            # Set the key-management to "sae" when WPA3 is used
+            if wpa3:
+                access_point[ssid]["auth"]["key-management"] = "sae"
+            else:
+                access_point[ssid]["auth"]["key-management"] = "psk"
 
     # Define the interface_info
     interface_info = {
@@ -315,12 +321,28 @@ def print_route_info():
     print()
 
 
+def _validate_gateway_ip(gateway):
+    if not gateway:
+        return ""
+    # Check if the gateway is a valid IP address
+    # Examples:
+    # 192.168.144.1 (TP-Link 123)
+    # 192.168.144.1
+    ip_address = gateway.split()[0]  # Get the first part before any space
+    try:
+        ipaddress.ip_address(ip_address)
+        return ip_address
+    except ValueError:
+        return ""
+
+
 def get_gateway(interface, renderer):
-    gateway = None
     info = get_interface_info(interface, renderer)
-    gateway = info.get("gateway", None)
+    gateway = info.get("gateway") or ""
+    validated_gateway = _validate_gateway_ip(gateway)
     print("Got gateway address: {}".format(gateway))
-    return gateway
+    print("Validated gateway address: {}".format(validated_gateway))
+    return validated_gateway
 
 
 def perform_ping_test(interface, renderer):

@@ -1,7 +1,6 @@
 #! /usr/bin/python3
 
 import re
-from shutil import which
 import subprocess as sp
 import typing as T
 
@@ -21,7 +20,6 @@ TEST_NAME_TO_IOCTL_MAP = {
         "VIDIOC_S_TUNER",
         "VIDIO_ENUM_FREQ_BANDS",
     ],
-    "VIDIOC_G/S_FREQUENCY": ["VIDIOC_G_FREQUENCY", "VIDIOC_S_FREQUENCY"],
     "VIDIOC_S_HW_FREQ_SEEK": ["VIDIOC_S_HW_FREQ_SEEK"],
     "VIDIOC_ENUMAUDIO": ["VIDIOC_ENUMAUDIO"],
     "VIDIOC_G/S/ENUMINPUT": [
@@ -98,19 +96,26 @@ TEST_NAME_TO_IOCTL_MAP = {
 
 
 # see the summary dict literal for actual keys
-Summary = T.Dict[str, T.Union[int, str]]
+Summary = T.Dict[str, T.Union[int, T.Optional[str]]]
 # see the details dict literal for actual keys
 Details = T.Dict[str, T.List[str]]
 
 
 def get_test_name_from_line(line: str) -> T.Tuple[str, bool]:
-    assert line.startswith("test"), "This line doesn't describe a test output"
+    """Gets the test name and returns whether the line includes a ioctl name
+    - Some tests could look like "test multiple open" -> doesn't include a name
+    :param line: a single line from v4l2 compliance output
+    :return: tuple of test_name, is_ioctl_name
+    """
+    assert line.startswith(
+        "test"
+    ), "This line doesn't describe a test output. Line is {}".format(line)
     test_name = line.split("test ", maxsplit=1)[1].split(": ", maxsplit=1)[0]
     return test_name, test_name.startswith("VIDIOC")
 
 
 def parse_v4l2_compliance(
-    device: T.Optional[str] = None,
+    device: T.Union[int, str, None] = None,
 ) -> T.Tuple[Summary, Details]:
     """Parses the output of v4l2-compliance
 
@@ -124,45 +129,40 @@ def parse_v4l2_compliance(
 
     :rtype: T.Tuple[Summary, Details]
     """
-    assert which("v4l2-compliance")
 
     out = sp.run(
-        [
-            "v4l2-compliance",
-            *(["-d", str(device)] if device else []),
-            "-C",
-            "never",
-        ],
+        ["v4l2-compliance", *(["-d", str(device)] if device else [])],
         universal_newlines=True,
         stdout=sp.PIPE,
         stderr=sp.PIPE,
     )  # can't really depend on the return code here
     # since any failure => return code 1
 
-    if "Cannot open device" in out.stderr:
+    error_prefixes = ("Failed to open", "Cannot open device")
+    if any(out.stderr.startswith(prefix) for prefix in error_prefixes):
         # can't open the device
-        raise ValueError(out.stderr)
+        raise FileNotFoundError(out.stderr)
 
-    lines = []  # type: list[str]
-    for line in out.stdout.splitlines():
-        clean_line = line.strip()
-        if clean_line != "":
-            lines.append(clean_line)
+    lines = [line.strip() for line in out.stdout.splitlines() if line.strip()]
 
     pattern = (
-        r"Total for (.*): (.*), Succeeded: (.*), Failed: (.*), Warnings: (.*)"
+        r"Total(?: for (.*))?: (.*), "
+        r"Succeeded: (.*), Failed: (.*), Warnings: (.*)"
     )
     match_output = re.match(pattern, lines[-1])
 
-    summary = {}
-    if match_output:
-        summary = {
-            "device_name": match_output.group(1),
-            "total": int(match_output.group(2)),
-            "succeeded": int(match_output.group(3)),
-            "failed": int(match_output.group(4)),
-            "warnings": int(match_output.group(5)),
-        }
+    assert match_output is not None, (
+        "There's no summary line in v4l2-compliance's output. "
+        "Output might be corrupted. Last line is: \n {}".format(lines[-1])
+    )
+
+    summary = {
+        "device_name": match_output.group(1),  # could be None, but won't panic
+        "total": int(match_output.group(2)),
+        "succeeded": int(match_output.group(3)),
+        "failed": int(match_output.group(4)),
+        "warnings": int(match_output.group(5)),
+    }
 
     details = {
         "succeeded": [],
@@ -171,29 +171,34 @@ def parse_v4l2_compliance(
     }  # type: dict[str, list[str]]
 
     for line in lines:
+        if not summary["device_name"] and line.startswith(
+            "Compliance test for"
+        ):
+            # try to see if there's a device name at the top
+            # if not, report None
+            clean_name = (
+                line.replace("Compliance test for ", "")
+                .replace(":", "")
+                .replace("(not using libv4l2)", "")
+                .strip()
+            )
+            if clean_name:
+                summary["device_name"] = clean_name
+            continue
+
         if line.endswith(": OK"):
-            name, is_ioctl_name = get_test_name_from_line(line)
-            if is_ioctl_name:
-                # ignore unknown test names, just don't append
-                for ioctl_name in TEST_NAME_TO_IOCTL_MAP.get(name, []):
-                    details["succeeded"].append(ioctl_name)
+            result = "succeeded"
         elif line.endswith(": OK (Not Supported)"):
-            name, is_ioctl_name = get_test_name_from_line(line)
-            if is_ioctl_name:
-                for ioctl_name in TEST_NAME_TO_IOCTL_MAP.get(name, []):
-                    details["not_supported"].append(ioctl_name)
+            result = "not_supported"
         elif line.endswith(": FAIL"):
-            name, is_ioctl_name = get_test_name_from_line(line)
-            if is_ioctl_name:
-                for ioctl_name in TEST_NAME_TO_IOCTL_MAP.get(name, []):
-                    details["failed"].append(ioctl_name)
+            result = "failed"
+        else:
+            continue
+
+        name, is_ioctl_name = get_test_name_from_line(line)
+        if is_ioctl_name:
+            # ignore unknown test names, just don't append
+            for ioctl_name in TEST_NAME_TO_IOCTL_MAP.get(name, []):
+                details[result].append(ioctl_name)
 
     return summary, details
-
-
-if __name__ == "__main__":
-    summary, details = parse_v4l2_compliance()
-    print(summary, "\n")
-    for k, v in details.items():
-        print(k, len(v))
-        print("\t", v)

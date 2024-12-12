@@ -6,6 +6,7 @@
 {%- set system_information = state.system_information -%}
 {
     "title": {{ state.metadata.title | jsonify | safe }},
+    "origin": {{ origin | jsonify | safe }},
 {%- if "testplan_id" in app_blob %}
 {%- if app_blob['testplan_id'] %}
     "testplan_id": {{ app_blob['testplan_id'] | jsonify | safe }},
@@ -65,7 +66,7 @@
             "type": "test",
             "project": "certification",
             "duration": {{ job_state.result.execution_duration if job_state.result.execution_duration else 0 }},
-            "plugin": "{{ job_state.job.plugin }}",
+            "plugin": {{ job_state.job.plugin | jsonify | safe }},
             "template_id": {{ job_state.job.template_id | jsonify | safe }}
         }{%- if not loop.last -%},{%- endif %}
     {%- endfor %}
@@ -85,7 +86,9 @@
             "io_log": {{ job_state.result.io_log_as_flat_text | jsonify | safe }},
             "type": "test",
             "project": "certification",
-            "duration": {{ job_state.result.execution_duration if job_state.result.execution_duration else 0}}
+            "duration": {{ job_state.result.execution_duration if job_state.result.execution_duration else 0 }},
+            "plugin": {{ job_state.job.plugin | jsonify | safe }},
+            "template_id": {{ job_state.job.template_id | jsonify | safe }}
         }{%- if not loop.last -%},{%- endif %}
     {%- endfor %}
     ],
@@ -102,7 +105,8 @@
             "outcome": "{{ job_state.result.outcome }}",
             "comments": {{ job_state.result.comments | jsonify | safe }},
             "io_log": {{ job_state.result.io_log_as_text_attachment | jsonify | safe }},
-            "duration": {{ job_state.result.execution_duration if job_state.result.execution_duration else 0}},
+            "duration": {{ job_state.result.execution_duration if job_state.result.execution_duration else 0 }},
+            "plugin": {{ job_state.job.plugin | jsonify | safe }},
             "template_id": {{ job_state.job.template_id | jsonify | safe }}
         }{%- if not loop.last -%},{%- endif %}
     {%- endfor %}
@@ -110,7 +114,14 @@
     "rejected-jobs": [
     {%- for job_id in state.metadata.rejected_jobs %}
         {
-            "full_id": "{{ job_id }}"
+            "id": "{{ job_id|strip_ns }}",
+            "full_id": "{{ job_id }}",
+            "name": "{{ job_state_map[job_id].job.tr_summary() }}",
+            "plugin": "{{ job_state_map[job_id].job.plugin }}",
+            "certification_status": "{{ job_state_map[job_id].effective_certification_status }}",
+            "category": "{{ category_map[job_state_map[job_id].effective_category_id] }}",
+            "category_id": "{{ job_state_map[job_id].effective_category_id }}",
+            "template_id": {{ job_state_map[job_id].job.template_id | jsonify | safe }}
         }{%- if not loop.last -%},{%- endif %}
     {%- endfor %}
     ],

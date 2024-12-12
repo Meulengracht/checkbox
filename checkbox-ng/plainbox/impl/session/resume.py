@@ -779,6 +779,10 @@ class SessionResumeHelper1(MetaDataHelper1MixIn):
                 self._process_job(session, jobs_repr, results_repr, job_id)
             except KeyError:
                 leftover_jobs.append(job_id)
+
+        leftover_jobs += session_repr.get("metadata", {}).get(
+            "rejected_jobs", []
+        )
         # Process leftovers. For each iteration the leftover_jobs list should
         # shrink or we're not making any progress. If that happens we've got
         # undefined jobs (in general the session is corrupted)
@@ -1235,13 +1239,13 @@ class SessionResumeHelper6(MetaDataHelper6MixIn, SessionResumeHelper5):
                 )
                 session = new_session
         # Restore bits and pieces of state
+        logger.debug(_("Starting to restore metadata..."))
+        self._restore_SessionState_metadata(session.metadata, session_repr)
+        logger.debug(_("restored metadata %r"), session.metadata)
         logger.debug(
             _("Starting to restore jobs and results to %r..."), session
         )
         self._restore_SessionState_jobs_and_results(session, session_repr)
-        logger.debug(_("Starting to restore metadata..."))
-        self._restore_SessionState_metadata(session.metadata, session_repr)
-        logger.debug(_("restored metadata %r"), session.metadata)
         logger.debug(_("Starting to restore mandatory job list..."))
         self._restore_SessionState_mandatory_job_list(session, session_repr)
         logger.debug(_("Starting to restore desired job list..."))

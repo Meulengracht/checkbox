@@ -1,0 +1,41 @@
+id: dss-validation
+unit: test plan
+_name: DSS validations with Intel and NVIDIA GPUs if available
+include:
+    dss/initialize
+    dss/namespace
+    dss/status_mlflow
+    dss/create_pytorch_cpu_notebook
+    cpu/pytorch_can_use_cpu
+    dss/remove_pytorch_cpu_notebook
+    dss/create_tensorflow_cpu_notebook
+    cpu/tensorflow_can_use_cpu
+    dss/remove_tensorflow_cpu_notebook
+    intel_gpu_plugin/install
+    intel_gpu_plugin/daemonset_name
+    intel_gpu_plugin/daemonset_number_available
+    intel_gpu_plugin/daemonset_number_ready
+    intel_gpu_plugin/labels
+    intel_gpu_plugin/gpu_count
+    intel_gpu_plugin/node_gpu_capacity
+    intel_gpu_plugin/node_gpu_allocatable
+    dss/status_intel_gpu
+    dss/create_tensorflow_intel_notebook
+    xpu/tensorflow_can_use_xpu
+    dss/remove_tensorflow_intel_notebook
+    dss/create_pytorch_intel_notebook
+    xpu/pytorch_can_use_xpu
+    dss/remove_pytorch_intel_notebook
+    nvidia_gpu_addon/enable
+    nvidia_gpu_addon/validations_succeed
+    dss/status_nvidia_gpu
+    dss/create_pytorch_cuda_notebook
+    cuda/pytorch_can_use_cuda
+    dss/remove_pytorch_cuda_notebook
+    dss/create_tensorflow_cuda_notebook
+    cuda/tensorflow_can_use_cuda
+    dss/remove_tensorflow_cuda_notebook
+bootstrap_include:
+    com.canonical.certification::executable
+    com.canonical.certification::snap
+    com.canonical.certification::graphics_card

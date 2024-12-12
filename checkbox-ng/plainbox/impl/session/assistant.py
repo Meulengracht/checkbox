@@ -513,6 +513,7 @@ class SessionAssistant:
         self._metadata.app_id = self._app_id
         self._metadata.title = title
         self._metadata.flags = {SessionMetaData.FLAG_BOOTSTRAPPING}
+        self._metadata.update_feature_flags(self._config)
         self._manager.checkpoint()
         self._command_io_delegate = JobRunnerUIDelegate(_SilentUI())
         self._init_runner(runner_cls, runner_kwargs)
@@ -828,12 +829,19 @@ class SessionAssistant:
             ] = "to run bootstrapping job"
             rb = self.run_job(job.id, "silent", False)
             self.use_job_result(job.id, rb.get_result())
+        # we may have a list of rejected jobs if this session is a resumed
+        # session
+        already_rejected = [
+            JobIdQualifier(job_id, None, inclusive=False)
+            for job_id in self._context.state.metadata.rejected_jobs
+        ]
         # Perform initial selection -- we want to run everything that is
         # described by the test plan that was selected earlier.
         desired_job_list = select_units(
             self._context.state.job_list,
             [plan.get_qualifier() for plan in self._manager.test_plans]
-            + self._exclude_qualifiers,
+            + self._exclude_qualifiers
+            + already_rejected,
         )
         self._context.state.update_desired_job_list(desired_job_list)
         # Set subsequent usage expectations i.e. all of the runtime parts are
@@ -841,7 +849,7 @@ class SessionAssistant:
         UsageExpectation.of(self).allowed_calls = (
             self._get_allowed_calls_in_normal_state()
         )
-        self._metadata.flags = {SessionMetaData.FLAG_INCOMPLETE}
+        self._metadata.flags.add(SessionMetaData.FLAG_INCOMPLETE)
         self._manager.checkpoint()
 
     @raises(UnexpectedMethodCall)
@@ -946,7 +954,7 @@ class SessionAssistant:
         if self._match_qualifiers:
             # when `match` is provided, use the test plan but prune it to
             # only pull the jobs asked in the launcher or their dependencies
-            desired_job_list = select_units(
+            desired_matching_job_list = select_units(
                 desired_job_list,
                 self._match_qualifiers
                 + self._exclude_qualifiers
@@ -956,6 +964,16 @@ class SessionAssistant:
                     )
                 ],
             )
+            rejected_job_list = [
+                job.id
+                for job in desired_job_list
+                if job not in desired_matching_job_list
+            ]
+            if rejected_job_list:
+                for rejected_job in rejected_job_list:
+                    self._metadata.rejected_jobs.append(rejected_job)
+                self._metadata.custom_joblist = True
+            desired_job_list = desired_matching_job_list
 
         self._context.state.update_desired_job_list(desired_job_list)
         # Set subsequent usage expectations i.e. all of the runtime parts are
@@ -963,7 +981,8 @@ class SessionAssistant:
         UsageExpectation.of(self).allowed_calls = (
             self._get_allowed_calls_in_normal_state()
         )
-        self._metadata.flags = {SessionMetaData.FLAG_INCOMPLETE}
+        self._metadata.flags.remove(SessionMetaData.FLAG_BOOTSTRAPPING)
+        self._metadata.flags.add(SessionMetaData.FLAG_INCOMPLETE)
         self._manager.checkpoint()
         # No bootstrap is done update the cache of jobs that were run
         # during bootstrap phase
@@ -997,13 +1016,11 @@ class SessionAssistant:
         UsageExpectation.of(self).enforce()
         self._metadata.custom_joblist = True
         desired_job_list = []
-        rejected_job_list = []
         for job_id in self.get_static_todo_list():
             if job_id in selection:
                 desired_job_list.append(self._context.get_unit(job_id, "job"))
-            else:
-                rejected_job_list.append(job_id)
-        self._metadata.rejected_jobs = rejected_job_list
+            elif job_id not in self.get_mandatory_jobs():
+                self._metadata.rejected_jobs.append(job_id)
         self._context.state.update_desired_job_list(desired_job_list)
 
     @raises(UnexpectedMethodCall)

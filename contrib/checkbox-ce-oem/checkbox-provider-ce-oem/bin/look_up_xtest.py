@@ -1,31 +1,24 @@
 #!/usr/bin/env python3
 
 from checkbox_support.snap_utils.snapd import Snapd
-from checkbox_support.snap_utils.system import get_gadget_snap
 
 
-def look_up_xtest():
-    if Snapd().list("x-test"):
-        return "x-test.xtest"
-    elif look_up_gadget() is not False:
-        return look_up_gadget()
-    else:
-        raise SystemExit(1)
+class ExtendSanpd(Snapd):
+    _apps = "/v2/apps"
+
+    def __init__(self, task_timeout=30, poll_interval=1, verbose=False):
+        super().__init__(task_timeout, poll_interval, verbose)
+
+    def list_apps(self, snaps):
+        return self._get(self._apps, params={"names": snaps})
 
 
-def look_up_gadget():
-    gadget = get_gadget_snap()
-    snap = Snapd().list(gadget)
-    if "apps" in snap.keys():
-        for app in snap["apps"]:
-            if app["name"] == "xtest":
+def look_up_app(target_app, snap_name=None):
+    """Lookup target app and the snap."""
+    apps = ExtendSanpd().list_apps(snap_name)
+    try:
+        for app in apps["result"]:
+            if app["name"] == target_app:
                 return ".".join([app["snap"], app["name"]])
-    return False
-
-
-def main():
-    print(look_up_xtest())
-
-
-if __name__ == "__main__":
-    main()
+    except Exception:
+        raise SystemError("Not found {} in the system!".format(target_app))

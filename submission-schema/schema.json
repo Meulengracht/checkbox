@@ -1,5 +1,5 @@
 {
-    "$schema": "http://json-schema.org/draft-06/schema#",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://certification.canonical.com/checkbox-submission.json",
     "description": "Output format for the Checkbox test framework (see more info at https://checkbox.readthedocs.io)",
     "$ref": "#/definitions/Submission",
@@ -11,6 +11,51 @@
                 "title": {
                     "type": "string"
                 },
+                "origin": {
+                "type": "object",
+                "required": [
+                    "name",
+                    "version",
+                    "packaging"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Name of the application used to run the test plan ('Checkbox')"
+                    },
+                    "version": {
+                        "type": "string",
+                        "description": "Version of Checkbox used to run the test plan."
+                    },
+                    "packaging": {
+                        "type": "object",
+                        "required": [
+                            "type",
+                            "version"
+                        ],
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "description": "Packaging type ('debian', 'snap', or 'source' if running in a Python virtual env"
+                            },
+                            "name": {
+                                "type": "string",
+                                "description": "Name of the package used, if any"
+                            },
+                            "version": {
+                                "type": "string",
+                                "description": "Version installed"
+                            },
+                            "revision": {
+                                "type": "string",
+                                "description": "Revision installed (only for Snaps)"
+                            }
+                        },
+                        "if": {"properties": {"type": {"const": "snap"}}},
+                        "then": {"required": ["revision"]}
+                    }
+                }
+            },
                 "testplan_id": {
                     "type": "string"
                 },
@@ -187,6 +232,17 @@
                 },
                 "plugin": {
                     "$ref": "#/definitions/Plugin"
+                },
+                "template_id": {
+                    "anyOf": [
+                        {
+                            "type": "null"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "If the job is instantiated from a template, this field points to its origin template."
                 }
             },
             "required": [
@@ -200,7 +256,9 @@
                 "io_log",
                 "name",
                 "outcome",
-                "status"
+                "status",
+                "plugin",
+                "template_id"
             ],
             "title": "Result"
         },
@@ -542,12 +600,47 @@
             "type": "object",
             "additionalProperties": false,
             "properties": {
+                "id": {
+                    "type": "string"
+                },
                 "full_id": {
                     "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "plugin": {
+                    "$ref": "#/definitions/Plugin"
+                },
+                "certification_status": {
+                    "$ref": "#/definitions/CertificationStatus"
+                },
+                "category": {
+                    "type": "string"
+                },
+                "category_id": {
+                    "type": "string"
+                },
+                "template_id": {
+                    "anyOf": [
+                        {
+                            "type": "null"
+                        },
+                        {
+                            "type": "string"
+                        }
+                    ],
+                    "description": "If the job is instantiated from a template, this field points to its origin template."
                 }
             },
             "required": [
-                "full_id"
+                "id",
+                "full_id",
+                "name",
+                "category",
+                "category_id",
+                "plugin",
+                "template_id"
             ],
             "title": "RejectedJob"
         },
@@ -645,7 +738,9 @@
                 "shell",
                 "user-interact-verify",
                 "user-interact",
-                "manual"
+                "manual",
+                "attachment",
+                "resource"
             ],
             "title": "Plugin"
         },

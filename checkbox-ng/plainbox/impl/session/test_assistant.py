@@ -28,6 +28,7 @@ from plainbox.impl.session.assistant import (
     UsageExpectation,
     SessionMetaData,
 )
+from plainbox.impl.unit.job import JobDefinition
 from plainbox.vendor import morris
 
 
@@ -276,3 +277,63 @@ class SessionAssistantTests(morris.SignalTestCase):
         # called once to get all the jobs for the selected testplan
         # and another time to prune it for match
         self.assertEqual(select_units_mock.call_count, 1)
+
+    @mock.patch("plainbox.impl.session.assistant.UsageExpectation")
+    @mock.patch("plainbox.impl.session.assistant.select_units")
+    def test_finish_bootstrap_match_rejected_jobs(
+        self, select_units_mock, ue_mock, get_providers_mock
+    ):
+        self_mock = mock.MagicMock()
+        self_mock._metadata.rejected_jobs = []
+        # this is just to test that the subfunction is called if this arr is
+        # defined, assumes the select_units function is mocked
+        self_mock._match_qualifiers = [1, 2, 3]
+
+        job1_id = "com.canonical.certification::job_1"
+        job2_id = "com.canonical.certification::job_2"
+        job1 = JobDefinition({"id": job1_id})
+        job2 = JobDefinition({"id": job2_id})
+        select_units_mock.side_effect = [[job1, job2], [job2]]
+
+        SessionAssistant.finish_bootstrap(self_mock)
+
+        # called once to get all the jobs for the selected testplan
+        # and another time to prune it for match`
+        self.assertEqual(select_units_mock.call_count, 2)
+
+        # job1 is rejected, so the metadata is updated accordingly
+        self.assertEqual(self_mock._metadata.rejected_jobs, [job1_id])
+        self.assertTrue(self_mock._metadata.custom_joblist)
+
+    @mock.patch(
+        "plainbox.impl.session.assistant.UsageExpectation",
+        new=mock.MagicMock(),
+    )
+    def test_use_alternate_selection(self, mock_get_providers):
+        self_mock = mock.MagicMock()
+
+        job1_id = "com.canonical.certification::job_1"
+        job2_id = "com.canonical.certification::job_2"
+        job3_id = "com.canonical.certification::job_3"
+        job1 = JobDefinition({"id": job1_id})
+        job2 = JobDefinition({"id": job2_id})
+        job3 = JobDefinition({"id": job3_id})
+
+        self_mock._metadata.rejected_jobs = ["already-rejected-job"]
+        self_mock.get_mandatory_jobs.return_value = [job1_id]
+        self_mock.get_static_todo_list.return_value = [
+            job1_id,
+            job2_id,
+            job3_id,
+        ]
+        self_mock._context.get_unit.side_effect = [job2]
+        selection = [job2_id]
+
+        SessionAssistant.use_alternate_selection(self_mock, selection)
+        # job1 is not part of the selection, but it's a mandatory job, so it
+        # should not be added to the rejected jobs, because it's going to be run.
+        self.assertEqual(
+            self_mock._metadata.rejected_jobs,
+            ["already-rejected-job", job3_id],
+        )
+        self_mock._context.get_unit.assert_called_once_with(job2_id, "job")

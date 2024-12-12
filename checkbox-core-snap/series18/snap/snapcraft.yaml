@@ -131,6 +131,7 @@ parts:
       - python3-requests-unixsocket
       - libbluetooth3
       - libsystemd0
+      - v4l-utils
     python-packages:
       - pynmea2
       - pybluez
@@ -172,6 +173,7 @@ parts:
       - python3-requests-oauthlib
       - python3-urwid
       - python3-xlsxwriter
+      - python3-yaml
     python-packages:
       - tqdm
     build-environment:

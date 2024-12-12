@@ -47,20 +47,22 @@ def run_with_retry(f, max_attempts, delay, *args, **kwargs):
             "delay should be at least 1 ({} was used)".format(delay)
         )
     for attempt in range(1, max_attempts + 1):
-        attempt_string = "Attempt {}/{}".format(attempt, max_attempts)
+        attempt_string = "Attempt {}/{} (function '{}')".format(
+            attempt, max_attempts, f.__name__
+        )
         print()
         print("=" * len(attempt_string))
         print(attempt_string)
-        print("=" * len(attempt_string))
+        print("=" * len(attempt_string), flush=True)
         try:
             result = f(*args, **kwargs)
             return result
         except BaseException as e:
             print("Attempt {} failed:".format(attempt))
             print(e)
-            print()
+            print(flush=True)
             if attempt >= max_attempts:
-                print("All the attempts have failed!")
+                print("All the attempts have failed!", flush=True)
                 raise
             min_delay = min(
                 initial_delay * (backoff_factor**attempt),
@@ -71,7 +73,10 @@ def run_with_retry(f, max_attempts, delay, *args, **kwargs):
             )  # Jitter: up to 50% of the delay
             total_delay = min_delay + jitter
             print(
-                "Waiting {:.2f} seconds before retrying...".format(total_delay)
+                "Waiting {:.2f} seconds before retrying...".format(
+                    total_delay
+                ),
+                flush=True,
             )
             time.sleep(total_delay)
 
@@ -97,7 +102,7 @@ def fake_run_with_retry(f, max_attempts, delay, *args, **kwargs):
     return f(*args, **kwargs)
 
 
-mock_timeout = functools.partial(
+mock_retry = functools.partial(
     patch,
     "checkbox_support.helpers.retry.run_with_retry",
     new=fake_run_with_retry,

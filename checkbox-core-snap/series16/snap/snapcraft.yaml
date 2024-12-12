@@ -124,6 +124,7 @@ parts:
     source: checkbox-support
     source-type: local
     stage-packages:
+      - v4l-utils
       - python3-dbus
       - python3-dev
       - python3-evdev
@@ -188,6 +189,7 @@ parts:
       - python3-xlsxwriter
       - python3-setuptools
       - python3-dev
+      - python3-yaml
     python-packages:
       - tqdm
     after: [checkbox-support]
