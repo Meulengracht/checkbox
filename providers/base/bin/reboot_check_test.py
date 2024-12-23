@@ -283,27 +283,46 @@ class HardwareRendererTester:
         else:
             print("Checking $DISPLAY={}".format(DISPLAY))
 
-        unity_support_output = sp.run(
-            ["{}/usr/lib/nux/unity_support_test".format(RUNTIME_ROOT), "-p"],
-            stdout=sp.PIPE,
-            universal_newlines=True,
-        )
-        if unity_support_output.returncode != 0:
+        try:
+            glmark2_output = sp.run(
+                ["glmark2-es2", "--off-screen", "--validate"],
+                stdout=sp.PIPE,
+                universal_newlines=True,
+                timeout=60,
+            )
+        except sp.TimeoutExpired:
+            print("[ ERR ] glmark2 timed out. Marking this test as failed.")
+            return False
+
+        if glmark2_output.returncode != 0:
             print(
                 "[ ERR ] unity support test returned {}. Error is: {}".format(
-                    unity_support_output.returncode,
-                    unity_support_output.stdout,
+                    glmark2_output.returncode,
+                    glmark2_output.stdout,
                 ),
                 file=sys.stderr,
             )
             return False
 
-        is_hardware_rendered = (
-            self.parse_unity_support_output(unity_support_output.stdout).get(
-                "Not software rendered"
-            )
-            == "yes"
-        )
+        gl_renderer_line = None  # type: str | None
+        for line in glmark2_output.stdout.splitlines():
+            if "GL_RENDERER" in line:
+                gl_renderer_line = line
+                break
+
+        # See the discussion on checkbox issue 1630
+        is_hardware_rendered = True
+        if gl_renderer_line is not None:
+            gl_renderer = gl_renderer_line.split(":")[-1].strip()
+            print("Found GL_RENDERER: {}".format(gl_renderer))
+            if gl_renderer in ("Software Rasterizer", "Mesa X11"):
+                is_hardware_rendered = False
+            if "llvmpipe" in gl_renderer or "on softpipe" in gl_renderer:
+                is_hardware_rendered = False
+        else:
+            print("[ ERR ] glmark2 did not return a renderer string")
+            return False
+
         if is_hardware_rendered:
             print("[ OK ] This machine is using a hardware renderer!")
             return True
