@@ -279,7 +279,7 @@ class HardwareRendererTester:
         DISPLAY = os.getenv("DISPLAY", "")
 
         if DISPLAY == "":
-            print("$DISPLAY is not set, we will let unity_support infer this")
+            print("$DISPLAY is not set, we will let glmark2 infer this")
         else:
             print("Checking $DISPLAY={}".format(DISPLAY))
 
@@ -287,6 +287,7 @@ class HardwareRendererTester:
             glmark2_output = sp.run(
                 ["glmark2-es2", "--off-screen", "--validate"],
                 stdout=sp.PIPE,
+                stderr=sp.STDOUT,
                 universal_newlines=True,
                 timeout=60,
             )
@@ -296,7 +297,7 @@ class HardwareRendererTester:
 
         if glmark2_output.returncode != 0:
             print(
-                "[ ERR ] unity support test returned {}. Error is: {}".format(
+                "[ ERR ] glmark2 returned {}. Error is: {}".format(
                     glmark2_output.returncode,
                     glmark2_output.stdout,
                 ),
@@ -311,6 +312,7 @@ class HardwareRendererTester:
                 break
 
         # See the discussion on checkbox issue 1630
+        # the same logic as unity_support_test
         is_hardware_rendered = True
         if gl_renderer_line is not None:
             gl_renderer = gl_renderer_line.split(":")[-1].strip()
@@ -338,7 +340,7 @@ class HardwareRendererTester:
         """
 
         start = time.time()
-        print("Checking if DUT has reached graphical.target...")
+        print("Checking if DUT has reached systemd's graphical.target...")
         while time.time() - start < max_wait_seconds:
             try:
                 out = sp.run(
