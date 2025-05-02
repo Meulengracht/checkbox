@@ -1,0 +1,255 @@
+### MMC ###
+
+plugin: user-interact
+category_id: com.canonical.plainbox::mediacard
+id: mediacard/mmc-storage-manual
+estimated_duration: 120 
+command:
+ checkbox-support-run_watcher storage mediacard_combo
+imports: from com.canonical.plainbox import manifest
+requires:
+ manifest.has_card_reader == 'True'
+user: root
+_purpose:
+     This test will check that the system's media card reader can
+     detect the insertion of a Multimedia Card (MMC) media. Then it
+     performs a read and write test on the MMC card. Finally, it
+     checks that the system correctly detects the removal of the MMC card.
+_steps:
+     1. Commence the test and then insert an MMC card into the reader.
+        (Note: this test will time-out after 30 seconds.)
+     2. Do not remove the device after this test.
+     3. Wait for the read/write operations to complete.
+     4. Press Enter to start the removal test.
+     5. Remove the MMC card from the reader.
+        (Note: this test will time-out after 30 seconds.)
+_verification:
+     The verification of this test is automated. Do not change the
+     automatically selected result.
+_summary: Test Multimedia Card (MMC) insertion + read/write + removal.
+
+### SDHC Card ###
+
+plugin: user-interact
+category_id: com.canonical.plainbox::mediacard
+id: mediacard/sdhc-storage-manual
+flags: also-after-suspend
+estimated_duration: 30.0
+command:
+ checkbox-support-run_watcher storage mediacard_combo
+imports: from com.canonical.plainbox import manifest
+requires:
+ manifest.has_card_reader == 'True'
+user: root
+_summary: Test SDHC card insertion + read/write + removal.
+_purpose:
+     This test will check that the system's media card reader can
+     detect the insertion of a UNLOCKED Secure Digital High-Capacity
+     (SDHC) media card
+     Then it performs a read and write test on the SDHC card. 
+     Finally, it checks that the system detects the removal of the SDHC card.
+_steps:
+     1. Commence the test and then insert an UNLOCKED SDHC card into the reader.
+     (Note: this test will time-out after 30 seconds.)
+     2. Do not remove the device after this test.
+     3. Wait for the read/write operations to complete.
+     4. Press Enter to start the removal test.
+     5. Remove the SDHC card from the reader.
+        (Note: this test will time-out after 30 seconds.)
+_verification:
+     The verification of this test is automated. Do not change the
+     automatically selected result.
+
+### CF Card ###
+
+plugin: user-interact
+category_id: com.canonical.plainbox::mediacard
+id: mediacard/cf-storage-manual
+estimated_duration: 120
+command:
+ checkbox-support-run_watcher storage mediacard_combo
+imports: from com.canonical.plainbox import manifest
+requires:
+ manifest.has_card_reader == 'True'
+user: root
+_purpose:
+     This test will check that the system's media card reader can
+     detect the insertion of a Compact Flash (CF) media card
+     Then it performs a read and write test on the CF card. 
+     Finally, it checks that the system detects the removal of the CF card.
+_steps:
+     1. Commence the test and then insert a CF card into the reader.
+     (Note: this test will time-out after 30 seconds.)
+     2. Do not remove the device after this test.
+     3. Wait for the read/write operations to complete.
+     4. Press Enter to start the removal test.
+     5. Remove the MMC card from the reader.
+        (Note: this test will time-out after 30 seconds.)
+_verification:
+ The verification of this test is automated. Do not change the
+ automatically selected result.
+_summary: Test Compact Flash (CF) card insertion + read/write + removal.
+
+### SDXC Card ###
+
+plugin: user-interact
+category_id: com.canonical.plainbox::mediacard
+id: mediacard/sdxc-storage-manual
+estimated_duration: 120
+command:
+ checkbox-support-run_watcher storage mediacard_combo
+imports: from com.canonical.plainbox import manifest
+requires:
+ manifest.has_card_reader == 'True'
+user: root
+_summary: Test SDXC card insertion + read/write + removal.
+_purpose:
+     This test will check that the system's media card reader can
+     detect the insertion of a Secure Digital Extended Capacity (SDXC) media card
+     Then it performs a read and write test on the SDXC card. 
+     Finally, it checks that the system detects the removal of the SDXC card.
+_steps:
+     1. Commence the test and then insert an UNLOCKED SDXC card into the reader.
+     (Note: this test will time-out after 30 seconds.)
+     2. Do not remove the device after this test.
+     3. Wait for the read/write operations to complete.
+     4. Press Enter to start the removal test.
+     5. Remove the SDXC card from the reader.
+        (Note: this test will time-out after 30 seconds.)
+_verification:
+ The verification of this test is automated. Do not change the
+ automatically selected result.
+
+### MS Card ###
+
+plugin: user-interact
+category_id: com.canonical.plainbox::mediacard
+id: mediacard/ms-storage-manual
+estimated_duration: 120
+command:
+ checkbox-support-run_watcher storage mediacard_combo
+imports: from com.canonical.plainbox import manifest
+requires:
+ manifest.has_card_reader == 'True'
+user: root
+_purpose:
+     This test will check that the system's media card reader can
+     detect the insertion of a Memory Stick (MS) media card
+     Then it performs a read and write test on the MS card. 
+     Finally, it checks that the system detects the removal of the MS card.
+_steps:
+     1. Commence the test and then insert a MS card into the reader.
+     (Note: this test will time-out after 30 seconds.)
+     2. Do not remove the device after this test.
+     3. Wait for the read/write operations to complete.
+     4. Press Enter to start the removal test.
+     5. Remove the MS card from the reader.
+        (Note: this test will time-out after 30 seconds.)
+_verification:
+ The verification of this test is automated. Do not change the
+ automatically selected result.
+_summary:
+ Test  Memory Stick (MS) card insertion + read/write + removal.
+
+### MSP Card ###
+
+plugin: user-interact
+category_id: com.canonical.plainbox::mediacard
+id: mediacard/msp-storage-manual
+estimated_duration: 120
+command:
+ checkbox-support-run_watcher storage mediacard_combo
+user: root
+imports: from com.canonical.plainbox import manifest
+requires:
+ manifest.has_card_reader == 'True'
+_description:
+_purpose:
+     This test will check that the system's media card reader can
+     detect the insertion of a Memory Stick Pro (MSP) media card
+     Then it performs a read and write test on the MSP card. 
+     Finally, it checks that the system detects the removal of the MSP card.
+_steps:
+     1. Commence the test and then insert a MSP card into the reader.
+        (Note: this test will time-out after 30 seconds.)
+     2. Do not remove the device after this test.
+     3. Wait for the read/write operations to complete.
+     4. Press Enter to start the removal test.
+     5. Remove the MSP card from the reader.
+        (Note: this test will time-out after 30 seconds.)
+_verification:
+     The verification of this test is automated. Do not change the
+     automatically selected result.
+_summary: 
+ Test Memory Stick Pro (MSP) card insertion + read/write + removal.
+
+### xD Card ###
+
+plugin: user-interact
+category_id: com.canonical.plainbox::mediacard
+id: mediacard/xd-storage-manual
+estimated_duration: 120
+command:
+ checkbox-support-run_watcher storage mediacard_combo
+imports: from com.canonical.plainbox import manifest
+requires:
+ manifest.has_card_reader == 'True'
+user: root
+_purpose:
+     This test will check that the system's media card reader can
+     detect the insertion of an Extreme Digital (xD) media card.
+     Then it performs a read and write test on the XD card. 
+     Finally, it checks that the system detects the removal of the XD card.
+_steps:
+     1. Commence the test and then insert an xD card into the reader.
+     (Note: this test will time-out after 30 seconds.)
+     2. Do not remove the device after this test.
+     3. Wait for the read/write operations to complete.
+     4. Press Enter to start the removal test.
+     5. Remove the MS card from the reader.
+        (Note: this test will time-out after 30 seconds.)
+_verification:
+ The verification of this test is automated. Do not change the
+ automatically selected result.
+_summary: 
+ Test Extreme Digital (xD) card insertion + read/write + removal.
+
+### GENERAL ###
+
+plugin: shell
+category_id: com.canonical.plainbox::mediacard
+id: mediacard/sd-preinserted
+estimated_duration: 30.0
+user: root
+flags: preserve-cwd
+command: removable_storage_test.py -s 268400000 --memorycard -l sdio usb scsi && removable_storage_test.py --memorycard sdio usb scsi
+imports: from com.canonical.plainbox import manifest
+requires:
+ package.name == 'udisks2' or snap.name == 'udisks2'
+ manifest.has_card_reader == 'True'
+_summary: Automated test of SD Card reading & writing (udisks2)
+_description:
+_purpose:
+ This is a fully automated version of mediacard/sd-automated and assumes that the
+ system under test has a memory card device plugged in prior to checkbox execution.
+ It is intended for SRU automated testing.
+
+unit: template
+template-resource: removable_partition
+template-filter: removable_partition.bus == 'mediacard'
+template-unit: job
+plugin: shell
+category_id: com.canonical.plainbox::mediacard
+id: mediacard/storage-preinserted-{symlink_uuid}
+template-id: mediacard/storage-preinserted-symlink_uuid
+user: root
+estimated_duration: 45.0
+flags: also-after-suspend reset-locale
+command: USB_RWTEST_PARTITIONS={symlink_uuid} checkbox-support-usb_read_write
+imports: from com.canonical.plainbox import manifest
+requires:
+ manifest.has_card_reader == 'True'
+_summary: Automated test of SD Card reading & writing ({symlink_uuid})
+_purpose:
+ This is a fully automated version of mediacard/sd-automated and assumes that the
+ system under test has a memory card device plugged in prior to checkbox execution.

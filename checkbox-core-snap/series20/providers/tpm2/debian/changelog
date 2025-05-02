@@ -1,0 +1,24 @@
+checkbox-provider-tpm2 (2.8) UNRELEASED; urgency=medium
+
+  * new upstream version
+
+ -- Devices Certification Bot <robot@canonical.com>  Wed, 14 Jun 2023 06:35:57 +0000
+
+checkbox-provider-tpm2 (2.1.0) unstable; urgency=medium
+
+  * "new upstream version"
+
+ -- Devices Certification Bot <robot@canonical.com>  Thu, 17 Nov 2022 09:51:23 +0000
+
+checkbox-provider-tpm2 (2.0.0) unstable; urgency=medium
+
+  * new upstream version
+
+ -- Sylvain Pineau <sylvain.pineau@canonical.com>  Sat, 24 Sep 2022 09:51:51 +0200
+
+plainbox-provider-tpm2 (1.19.0) unstable; urgency=low
+
+  [ Jenkins ]
+  * "new upstream version"
+
+ -- Jenkins <ubuntu@cert-jenkins-master-201506-18558.maas>  Fri, 19 Aug 2022 07:21:33 +0000

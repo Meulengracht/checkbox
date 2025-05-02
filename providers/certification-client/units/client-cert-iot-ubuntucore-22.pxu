@@ -113,6 +113,7 @@ nested_part:
   info-attachment-cert-automated
   self-automated
   ubuntucore-automated
+  ubuntucore-22-team
   iot-fwts-automated
   acpi-automated
   audio-automated

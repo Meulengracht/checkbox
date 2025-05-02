@@ -1,0 +1,577 @@
+plugin: manual
+category_id: com.canonical.plainbox::power-management
+id: power-management/shutdown-boot
+estimated_duration: 300.0
+_purpose:
+    This test will check your system's shutdown/booting cycle.
+_steps:
+    1. Shutdown your machine.
+    2. Boot your machine.
+    3. Repeat steps 1 and 2 at least 5 times.
+_verification:
+    Did the system shutdown and reboot correctly?
+_summary: Test the system's shutdown and booting cycle for correctness.
+
+plugin: shell
+category_id: com.canonical.plainbox::power-management
+id: power-management/fwts_wakealarm
+environ: PLAINBOX_SESSION_SHARE
+estimated_duration: 25.0
+user: root
+_purpose: Test ACPI Wakealarm (fwts wakealarm)
+requires: executable.name == 'fwts'
+command: checkbox-support-fwts_test -f aborted -t wakealarm -l "$PLAINBOX_SESSION_SHARE"/fwts-wakealarm.log
+_summary: Executes ACPI Wakealarm test to validate functionality.
+
+plugin: shell
+category_id: com.canonical.plainbox::power-management
+id: after-suspend-power-management/fwts_wakealarm
+depends: com.canonical.certification::suspend/suspend_advanced_auto
+environ: PLAINBOX_SESSION_SHARE
+estimated_duration: 25.0
+user: root
+_purpose: Test ACPI Wakealarm (fwts wakealarm)
+requires: executable.name == 'fwts'
+command: checkbox-support-fwts_test -f aborted -t wakealarm -l "$PLAINBOX_SESSION_SHARE"/fwts-wakealarm_after_suspend.log
+_summary: Test the ACPI Wakealarm functionality using fwts.
+
+plugin: attachment
+category_id: com.canonical.plainbox::power-management
+id: power-management/fwts_wakealarm-log-attach
+depends: power-management/fwts_wakealarm
+estimated_duration: 2.0
+_purpose: Attach log from fwts wakealarm test
+command: [ -e "${PLAINBOX_SESSION_SHARE}"/fwts-wakealarm.log ] && cat "${PLAINBOX_SESSION_SHARE}"/fwts-wakealarm.log
+_summary: Attach and display fwts wakealarm test log.
+
+plugin: attachment
+category_id: com.canonical.plainbox::power-management
+id: after-suspend-power-management/fwts_wakealarm-log-attach
+after: after-suspend-power-management/fwts_wakealarm
+estimated_duration: 2.0
+_purpose: Attach log from fwts wakealarm test
+command: [ -e "${PLAINBOX_SESSION_SHARE}"/fwts-wakealarm_after_suspend.log ] && cat "${PLAINBOX_SESSION_SHARE}"/fwts-wakealarm_after_suspend.log
+_summary: Attach the log from the fwts wakealarm test for analysis.
+
+plugin: shell
+category_id: com.canonical.plainbox::power-management
+id: power-management/poweroff
+estimated_duration: 120.0
+depends: power-management/fwts_wakealarm
+user: root
+environ: PLAINBOX_SESSION_SHARE PM_TEST_DRY_RUN
+requires: executable.name == 'fwts'
+command: pm_test.py --silent --checkbox-respawn-cmd "$PLAINBOX_SESSION_SHARE"/__respawn_checkbox poweroff --log-level=debug --log-dir="$PLAINBOX_SESSION_SHARE"
+flags: noreturn
+_purpose:
+  This test will check the system's ability to power-off and boot.
+_summary: Verify the system's ability to power-off and boot successfully.
+
+plugin: attachment
+category_id: com.canonical.plainbox::power-management
+id: power-management/poweroff-log-attach
+estimated_duration: 1.0
+command:
+ set -o pipefail
+ cat "$PLAINBOX_SESSION_SHARE"/*poweroff.1.log
+_purpose:
+ This will attach any logs from the power-management/poweroff test to the results.
+_summary:
+ Attach logs from the power-off test to the results.
+
+plugin: shell
+category_id: com.canonical.plainbox::power-management
+id: power-management/reboot
+estimated_duration: 120.0
+user: root
+environ: PLAINBOX_SESSION_SHARE PM_TEST_DRY_RUN
+requires: executable.name == 'fwts'
+command: pm_test.py --silent --checkbox-respawn-cmd "$PLAINBOX_SESSION_SHARE"/__respawn_checkbox reboot --log-level=debug --log-dir="$PLAINBOX_SESSION_SHARE"
+flags: noreturn
+_purpose:
+  This test will check the system's ability to reboot cleanly.
+_summary: Verify the system's reboot capability.
+
+plugin: attachment
+category_id: com.canonical.plainbox::power-management
+id: power-management/reboot-log-attach
+estimated_duration: 1.0
+command:
+ set -o pipefail
+ cat "$PLAINBOX_SESSION_SHARE"/*reboot.1.log
+_purpose: This will attach any logs from the power-management/reboot test to the results.
+_summary: Attach logs from power-management/reboot test to the results.
+
+plugin: manual
+category_id: com.canonical.plainbox::power-management
+id: power-management/lid
+estimated_duration: 120.0
+requires: dmi.product in ['Notebook','Laptop','Portable','Convertible']
+_description:
+_purpose:
+    This test will check your lid sensors.
+_steps:
+    1. Close your laptop lid.
+_verification:
+    Does closing your laptop lid cause your system to suspend?
+_summary: Check if the laptop lid sensors cause the system to suspend when the lid is closed.
+
+plugin: shell
+category_id: com.canonical.plainbox::power-management
+id: power-management/switch_power_mode
+estimated_duration: 10.0
+requires:
+  module.name == 'platform_profile'
+  package.name == 'power-profiles-daemon'
+  platform_profile.supported == 'True'
+user: root
+command: switch_power_mode.py
+_description:
+  This test will check if the power mode could be switched.
+
+plugin: user-interact-verify
+category_id: com.canonical.plainbox::power-management
+id: power-management/lid_close
+estimated_duration: 60.0
+requires: device.product == 'Lid Switch'
+command:
+ # shellcheck disable=SC2034
+ for i in {1..20}; do
+  state=$(cat /proc/acpi/button/lid/*/state | awk '{print $2}')
+  # shellcheck disable=SC2015
+  [ "$state" = "closed" ] && exit 0 || sleep 0.5
+ done
+ exit 1
+_description:
+_purpose:
+ This test will check your lid sensors.
+_steps:
+ 1. Press "Enter".
+ 2. Close and open the lid.
+_verification:
+ Did the screen turn off while the lid was closed?
+_summary: Verify the functionality of lid sensors by checking screen behavior upon lid actions.
+
+plugin: user-interact-verify
+category_id: com.canonical.plainbox::power-management
+id: power-management/lid_open
+estimated_duration: 60.0
+requires: device.product == 'Lid Switch'
+command:.
+ # shellcheck disable=SC2034
+ for i in {1..20}; do
+  state=$(cat /proc/acpi/button/lid/*/state | awk '{print $2}')
+  # shellcheck disable=SC2015
+  [ "$state" = "open" ] && exit 0 || sleep 0.5
+ done
+ exit 1
+_purpose:
+ This test will check your lid sensors.
+_steps:
+ 1. Press "Enter".
+ 2. Close the lid.
+ 3. Wait 5 seconds with the lid closed.
+ 4. Open the lid.
+_verification:
+ Did the system resume when the lid was opened?
+_summary: Verify the functionality of lid sensors and system resume on lid open.
+
+plugin: user-interact-verify
+category_id: com.canonical.plainbox::power-management
+id: power-management/lid_close_suspend_open
+estimated_duration: 20.0
+requires: device.product == 'Lid Switch'
+_purpose:
+    This test will check your lid sensor can detect lid close/open, and the DUT (Device Under Test) will suspend when the lid is closed
+_steps:
+    1. Press "Enter" to start the test
+    2. Close the lid (Please close the lid within 10 seconds)
+    3. Wait 5 seconds with the lid closed
+    4. Open the lid
+_verification:
+    Did the system suspend when the lid was closed, and resume back when the lid was opened?
+    Note: Systemd will not react to lid events if the DUT was just started or resumed. Please make sure the DUT has been running for long enough before running this test.
+command:
+    lid_close_suspend_open.sh
+_summary: Test the functionality of the laptop's lid sensor for suspend/resume actions.
+
+plugin: shell
+category_id: com.canonical.plainbox::power-management
+id: power-management/rtc
+flags: also-after-suspend
+requires:
+  rtc.state == 'supported'
+  cpuinfo.other != 'emulated by qemu'
+user: root
+environ: RTC_DEVICE_FILE
+command: 
+  if [[ -n "$RTC_DEVICE_FILE" ]]; then
+    rtc_path="/sys/class/rtc/${RTC_DEVICE_FILE/#\/dev\/}"
+  else
+    rtc_path="/sys/class/rtc/rtc0"
+  fi
+  if [[ -f "${rtc_path}/since_epoch" ]]; then
+    rtc_time=$(cat "${rtc_path}/since_epoch")
+    echo "RTC time: ${rtc_time} seconds since epoch."
+  else
+    echo "RTC time information not available."
+    exit 1
+  fi
+estimated_duration: 0.02
+_summary: Test that RTC functions properly (if present)
+_purpose:
+ Verify that the Real-time clock (RTC) device functions properly, if present.
+
+plugin: shell
+category_id: com.canonical.plainbox::power-management
+id: power-management/tickless_idle
+flags: also-after-suspend
+estimated_duration: 1.0
+requires: cpuinfo.platform in ('i386', 'x86_64', 'ppc64el', 'ppc64le', 'pSeries')
+_purpose: Check to see if CONFIG_NO_HZ is set in the kernel (this is just a simple regression check)
+command:
+ zgrep 'CONFIG_NO_HZ=y' /boot/config-"$(uname -r)" >/dev/null 2>&1 || ( echo "WARNING: Tickless Idle is NOT set" >&2 && exit 1 )
+_summary: Verify the tickless idle feature configuration in the kernel.
+
+plugin: manual
+category_id: com.canonical.plainbox::power-management
+id: power-management/unplug_ac
+estimated_duration: 30.0
+_purpose:
+ This test will ensure that the AC is unplugged for the battery drain tests to run.
+_steps:
+ 1. Unplug laptop from AC.
+_verification:
+ Was the laptop unplugged from AC?
+_summary: Ensure the AC is unplugged for battery drain tests by verifying the laptop is unplugged.
+
+plugin: shell
+category_id: com.canonical.plainbox::power-management
+id: power-management/battery_drain_idle
+estimated_duration: 90.0
+requires: package.name == 'upower'
+depends: power-management/unplug_ac
+_purpose: Checks the battery drain during idle. Reports time and capacity until empty.
+command:
+ battery_test.py -t 90 --idle
+_summary: Evaluate battery drain while the device is idle.
+
+plugin: shell
+category_id: com.canonical.plainbox::power-management
+id: power-management/battery_drain_movie
+estimated_duration: 90.0
+requires:
+ package.name == 'upower'
+depends: power-management/unplug_ac
+_purpose: Checks the battery drain while watching a movie. Reports time and capacity until empty. Requires MOVIE_VAR to be set.
+command:
+ battery_test.py -t 90 --movie "$MOVIE_VAR"
+_summary: Check the battery performance during movie playback.
+
+plugin: shell
+category_id: com.canonical.plainbox::power-management
+id: power-management/battery_drain_sleep
+estimated_duration: 140.0
+user: root
+requires:
+ package.name == 'upower'
+ executable.name == 'fwts'
+depends: power-management/unplug_ac
+_purpose: Checks the battery drain during suspend. Reports time and capacity until empty.
+command:
+ battery_test.py -t 120 --sleep
+_summary: Evaluate battery drain during suspend mode.
+
+plugin: manual
+category_id: com.canonical.plainbox::power-management
+id: power-management/plug_ac
+estimated_duration: 30.0
+depends: power-management/battery_drain_idle power-management/battery_drain_movie power-management/battery_drain_sleep
+_purpose:
+    This test will ensure that the AC is plugged back in after the battery tests.
+_steps:
+    1. Plug laptop into AC.
+_verification:
+    Was the laptop plugged into AC?
+_summary: Verify the laptop is plugged into AC after battery tests.
+
+plugin: user-interact-verify
+category_id: com.canonical.plainbox::power-management
+id: power-management/reboot_manual
+estimated_duration: 120.0
+user:root
+command: shutdown -r now
+_summary:
+ Verify that the system can successfully reboot.
+_purpose:
+ This test will verify that your system can successfully reboot.
+_steps:
+ 1. Press 'Enter' to initiate a system reboot.
+ 2. When the grub boot menu is displayed, boot into Ubuntu (Or allow the
+ system to automatically boot on its own).
+ 3. Once the system has restarted, log in and restart checkbox-certification-server.
+ 4. Select 'Re-Run' to return to this test.
+ 5. Select Pass to indicate the test has passed if the system rebooted
+ successfully, otherwise, select 'Fail' to indicate there was a problem.
+_verification:
+ Did the system reboot correctly?
+
+plugin: user-interact-verify
+category_id: com.canonical.plainbox::power-management
+id: power-management/shutdown_manual
+estimated_duration: 120.0
+user: root
+command: shutdown -h now
+_purpose:
+ This test will check your system shutdown/booting cycle
+_steps:
+ 1. Press 'Enter' to initiate a system shutdown.
+ 2. Power the system back on.
+ 3. From the grub menu, boot into the Xen Hypervisor.
+ 4. When the system has restarted, log in and restart checkbox-certification-server.
+ 5. Select 'Re-Run' to return to this test.
+ 6. Select Pass to indicate the test has passed if the machine shut down
+ successfully otherwise, select 'Fail' to indicate there was a problem.
+_verification:
+ Did the system shutdown and boot correctly?
+_summary:
+ Test the system shutdown and boot cycle.
+
+id: power-management/poweroff-manual
+_summary: System can be powered off
+_purpose:
+ Check if the system can power off successfully
+_steps:
+ 1. Execute the following command:
+  sudo poweroff
+_verification:
+ System powers off successfully
+plugin: manual
+category_id: com.canonical.plainbox::power-management
+estimated_duration: 300
+
+id: power-management/reboot-manual
+_summary: System can be rebooted manually
+_purpose:
+ Check system can reboot manually
+_steps:
+ 1. Execute the following command:
+  sudo reboot
+_verification:
+ System reboots successfully
+plugin: manual
+category_id: com.canonical.plainbox::power-management
+estimated_duration: 300
+
+id: power-management/warm-reboot
+category_id: com.canonical.plainbox::power-management
+_summary: Warm reboot
+_purpose: This tests reboots the system using the `reboot` command
+unit: job
+plugin: shell
+command:
+ dbus-send --system --print-reply --dest=org.freedesktop.login1 /org/freedesktop/login1 "org.freedesktop.login1.Manager.Reboot" boolean:true
+user: root
+flags: preserve-locale noreturn autorestart
+estimated_duration: 180.0
+
+id: power-management/post-warm-reboot
+after: power-management/warm-reboot
+category_id: com.canonical.plainbox::power-management
+_summary: Post warm reboot service check
+_purpose: Check there are no failed services after the warm reboot
+unit: job
+plugin: shell
+command: failed_service_check.sh
+estimated_duration: 1.0
+
+id: power-management/cold-reboot
+category_id: com.canonical.plainbox::power-management
+_summary: Cold reboot
+_purpose: This test powers off the system and then powers it on using RTC
+unit: job
+plugin: shell
+requires:
+ rtc.state == 'supported'
+ rtc.wakealarm == 'supported'
+command:
+ rtcwake -v -d "${RTC_DEVICE_FILE:-rtc0}" --mode no -s "${COLD_REBOOT_DELAY:-120}"
+ sleep 5
+ rtcwake -v -d "${RTC_DEVICE_FILE:-rtc0}" -m show
+ sleep 5
+ dbus-send --system --print-reply --dest=org.freedesktop.login1 /org/freedesktop/login1 "org.freedesktop.login1.Manager.PowerOff" boolean:true
+user: root
+flags: preserve-locale noreturn autorestart
+environ: COLD_REBOOT_DELAY RTC_DEVICE_FILE
+estimated_duration: 300
+
+id: power-management/post-cold-reboot
+after: power-management/cold-reboot
+category_id: com.canonical.plainbox::power-management
+_summary: Post cold reboot service check
+_purpose: Check there are no failed services after the cold reboot
+unit: job
+plugin: shell
+command: failed_service_check.sh
+estimated_duration: 1.0
+
+id: power-management/idle-screen-on-residency-check
+category_id: com.canonical.plainbox::power-management
+_summary: Test if CPU records time in desired low power C-state when idle
+_purpose:
+ When the system has the screen on, but the CPU is idle, it should enter deeper idle states
+ to reduce power consumption. The expected states are identified as PC8, PC9, and PC10.
+ For more detail, refer to https://web.archive.org/web/20230614200306/https://01.org/blogs/qwang59/2020/linux-s0ix-troubleshooting
+unit: job
+plugin: shell
+requires:
+ cpuinfo.type == 'GenuineIntel'
+ package.name == 'msr-tools'
+ sleep.mem_sleep == 's2idle'
+command:
+ short-idle-check.sh -s 20
+ RET=$?
+ if [ $RET -ne 0 ]; then
+     echo "The CPU package target idle state residency is 0."
+     echo "It will consume more power when the system has the screen on, but the CPU is idle."
+     echo "More detail is in https://web.archive.org/web/20230614200306/https://01.org/blogs/qwang59/2020/linux-s0ix-troubleshooting."
+     exit 1
+ fi
+user: root
+estimated_duration: 22
+
+id: power-management/cpu-low-power-idle
+category_id: com.canonical.plainbox::power-management
+_summary: CPU low power idle residency check
+_description:
+ Check if CPU can achieve low power idle when the screen is off.
+ For more detail, please refer to https://www.kernel.org/doc/html/latest/firmware-guide/acpi/lpit.html.
+_purpose: Check if CPU can achieve low power idle when the screen is off.
+unit: job
+plugin: shell
+requires:
+ cpuinfo.cpu_lpi_file in ('low_power_idle_cpu_residency_us', 'package_cstate_show')
+ sleep.mem_sleep == 's2idle'
+ package.name == 'evemu-tools'
+command:
+ cpu_lpi_file=$(cpuinfo_resource.py | grep cpu_lpi_file | awk '{ print $2 }')
+ if [ "$cpu_lpi_file" == "low_power_idle_cpu_residency_us" ]; then
+     before=$(cat /sys/devices/system/cpu/cpuidle/low_power_idle_cpu_residency_us)
+     screenoff.sh 20
+     after=$(cat /sys/devices/system/cpu/cpuidle/low_power_idle_cpu_residency_us)
+     residency=$((after-before))
+     echo "/sys/devices/system/cpu/cpuidle/low_power_idle_cpu_residency_us after/before screen off is $residency"
+ else
+     echo "The system doesn't have a hardware-based residency counter."
+     echo "Please check https://www.uefi.org/sites/default/files/resources/Intel_ACPI_Low_Power_S0_Idle.pdf"
+     before=$(cat < /sys/kernel/debug/pmc_core/package_cstate_show | grep C10 | awk '{ print $4 }')
+     screenoff.sh 20
+     after=$(cat < /sys/kernel/debug/pmc_core/package_cstate_show | grep C10 | awk '{ print $4 }')
+     residency=$((after-before))
+     echo "/sys/kernel/debug/pmc_core/package_cstate_show after/before screen off is $residency"
+ fi
+ if [ $residency -eq 0 ]; then
+     echo "The CPU can't enter low power idle when the screen is off."
+     echo "Please refer to https://www.kernel.org/doc/html/latest/firmware-guide/acpi/lpit.html."
+     exit 1
+ fi
+user: root
+estimated_duration: 25
+
+id: power-management/system-low-power-idle
+after: suspend/suspend_advanced_auto
+category_id: com.canonical.plainbox::power-management
+_summary: System low power idle residency check
+_purpose:
+ Check if the system can achieve low power idle in suspend.
+ For more detail, please refer to https://www.kernel.org/doc/html/latest/firmware-guide/acpi/lpit.html.
+unit: job
+plugin: shell
+requires:
+ cpuinfo.sys_lpi_file in ('low_power_idle_system_residency_us', 'slp_s0_residency_usec')
+ sleep.mem_sleep == 's2idle'
+command:
+ sys_lpi_file=$(cpuinfo_resource.py | grep sys_lpi_file | awk '{ print $2 }')
+ echo "mem_sleep: $(cat /sys/power/mem_sleep)"
+ dmesg | grep ACPI | grep supports | sed 's/\[.*ACPI/ACPI/'
+ echo "Content of /etc/default/grub:"
+ cat /etc/default/grub
+ if [ "$sys_lpi_file" == "low_power_idle_system_residency_us" ]; then
+     before=$(cat /sys/devices/system/cpu/cpuidle/low_power_idle_system_residency_us)
+     rtcwake --mode freeze -s 10
+     after=$(cat /sys/devices/system/cpu/cpuidle/low_power_idle_system_residency_us)
+     residency=$((after-before))
+     echo "/sys/devices/system/cpu/cpuidle/low_power_idle_system_residency_us after/before suspend is $residency"
+ else
+     echo "The system doesn't have hardware-based residency counter."
+     echo "please check https://www.uefi.org/sites/default/files/resources/Intel_ACPI_Low_Power_S0_Idle.pdf"
+     before=$(cat /sys/kernel/debug/pmc_core/slp_s0_residency_usec)
+     rtcwake --mode freeze -s 10
+     after=$(cat /sys/kernel/debug/pmc_core/slp_s0_residency_usec)
+     residency=$((after-before))
+     echo "/sys/kernel/debug/pmc_core/slp_s0_residency_usec after/before suspend is $residency"
+ fi
+ # shellcheck disable=SC2086
+ if [ $residency -eq 0 ]; then
+     echo "The system can't enter s0 when suspended."
+     echo "please refer to https://www.kernel.org/doc/html/latest/firmware-guide/acpi/lpit.html."
+     if [ -f /sys/kernel/debug/suspend_stats ]; then
+         echo "cat /sys/kernel/debug/suspend_stats"
+         cat /sys/kernel/debug/suspend_stats
+     fi
+     exit 1
+ fi
+user: root
+estimated_duration: 15
+
+unit: template
+template-resource: model_assertion
+template-unit: job
+plugin: shell
+category_id: com.canonical.plainbox::power-management
+id: power-management/tickless_idle_{kernel}
+template-id: power-management/tickless_idle_kernel
+estimated_duration: 1.0
+requires: cpuinfo.platform in ('i386', 'x86_64', 'ppc64el', 'ppc64le', 'pSeries')
+_purpose: Check to see if CONFIG_NO_HZ is set in the kernel (this is just a simple regression check)
+command:
+ zgrep 'CONFIG_NO_HZ=y' /snap/{kernel}/current/config-"$(uname -r)" >/dev/null 2>&1 || ( echo "WARNING: Tickless Idle is NOT set" >&2 && exit 1 )
+_summary: Verify if Tickless Idle (CONFIG_NO_HZ) is enabled in the kernel configuration.
+
+plugin: user-interact-verify
+category_id: com.canonical.plainbox::power-management
+id: power-management/light_sensor
+estimated_duration: 10.0
+requires:
+  dmi.product in ['Notebook','Laptop','Portable','Convertible']
+  executable.name == 'monitor-sensor'
+flags: also-after-suspend
+command: light_sensor_test.sh
+_purpose:
+    This test will check your Ambient Light Sensor work, if you don't have it, please skip this test.
+_steps:
+    1. Make sure "Automatic brightness" is ON in Power settings. 
+    2. Locate the Ambient Light Sensor, which should be around the Camera.
+    3. Cover your hand over the Ambient Light Sensor.
+    4. When the backlight dims, press Enter to start testing.
+    5. Wait until the message "Has ambient light sensor" is printed on the screen and wave your hand slowly during testing.
+_verification:
+    Did the Ambient Light Sensor values change when you _shook_ your hands over the sensor? 
+    Did the Screen backlight also change?
+_summary: Test the functionality of the Ambient Light Sensor by checking if sensor values and screen backlight change when covered.
+
+unit: job
+plugin: shell
+category_id: com.canonical.plainbox::power-management
+id: power-management/amd_pmf_detect
+flags: also-after-suspend
+imports: from com.canonical.plainbox import manifest
+requires: manifest.has_amd_pmf == 'True'
+command:
+ amd_pmf.py
+estimated_duration: 5s
+summary:
+    Test this machine have the AMD Platform Management Framework support or not
+description:
+    The AMD PMF driver should be loaded while the BIOS enabling this function and could be validated by
+    the outcome of lsmod automatically.

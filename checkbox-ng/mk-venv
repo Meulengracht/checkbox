@@ -4,12 +4,9 @@ venv_path=${1:-venv}
 
 venv_path=$(realpath "$venv_path")
 
-if [ -d "$venv_path" ]; then
-    echo "$venv_path already exists"
-    exit 1
+if ! [ -d "$venv_path" ]; then
+    python3 -m venv "$venv_path"
 fi
-
-virtualenv --quiet --system-site-packages --python=python3 "$venv_path"
 
 # To prevent https://www.shellcheck.net/wiki/SC1091
 # shellcheck source=/dev/null
@@ -24,7 +21,7 @@ echo "set -gx PROVIDERPATH $venv_path/share/plainbox-providers-1" >> "$venv_path
 echo "virtualenv with an empty provider database created at $venv_path"
 echo "To activate your virtualenv run:"
 if [ "$(basename "$SHELL")" = "fish" ]; then
-    echo "$ . $venv_path/bin/activate.fish"
+    echo ". $venv_path/bin/activate.fish"
 else
-    echo "$ . $venv_path/bin/activate"
+    echo ". $venv_path/bin/activate"
 fi
