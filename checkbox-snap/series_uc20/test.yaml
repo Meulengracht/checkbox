@@ -1,0 +1,76 @@
+job_queue: rpi4b
+provision_data:
+  url: https://cdimage.ubuntu.com/ubuntu-core/20/dangerous-edge/current/ubuntu-core-20-arm64+raspi.img.xz
+test_data:
+  attachments:
+    - local: "checkbox_4.4.0-dev91_arm64.snap"
+      agent: "checkbox.snap"
+    - local: "checkbox20_4.4.0-dev92_arm64.snap"
+      agent: "checkbox20.snap"
+  test_cmds: |
+        #!/bin/bash
+
+        # the machine running this script is the test controller
+        # it runs on any device that consumes the jobs on given queue name
+        # the controller has a 1:1 relationship with the DUT (device under test)
+        # to run anything on the DUT, the controller ssh's into the DUT and runs the commands there
+        # and then in the end runs checkbox to run the actual testing session
+        # the checkbox run is a typical remote session where the machine running this script is the
+        # Checkbox Controller and the DUT is the Checkbox Agent
+
+        set -x
+        set -e
+        # All job inputs
+        CHECKBOX_FRONTEND_TRACK="uc20"
+
+        curl -Ls -o install_tools.sh https://raw.githubusercontent.com/canonical/hwcert-jenkins-tools/main/install_tools.sh
+        # install the scriptlets and other tools on the agent and the device, as necessary
+        export TOOLS_PATH=tools
+        source install_tools.sh $TOOLS_PATH
+        wait_for_ssh --allow-degraded
+        wait_for_snap_changes
+        _run wait_for_packages_complete
+        _run clean_machine --im-sure
+
+        # push checkbox
+        scp ./attachments/test/*.snap $DEVICE_IP:~
+
+        # install checkbox
+        install_checkbox_snaps checkbox=$CHECKBOX_FRONTEND_TRACK/edge
+        _run sudo snap install --dangerous ./checkbox20.snap
+        _run sudo snap install --dangerous --devmode ./checkbox.snap
+
+        cat <<EOF > checkbox-launcher
+        # Please keep the indents below, for yaml formatting/templating
+        [launcher]
+        launcher_version = 1
+        stock_reports = submission_files
+
+        [test plan]
+        unit = com.canonical.certification::ubuntucore-20-team
+        forced = yes
+
+        [test selection]
+        forced = true
+
+        [ui]
+        type = silent
+
+        EOF
+        which envsubst > /dev/null || install_packages --no-update -- gettext > /dev/null
+        if ! fetch_manifest $CID $HEXR_DEVICE_SECURE_ID; then
+            echo "No manifest found for $CID"
+            touch manifest_conf
+        fi
+        stacker --output checkbox-launcher checkbox-launcher manifest_conf
+
+        # run the canary test plan
+        #set +e
+        #PYTHONUNBUFFERED=1 checkbox-cli control $DEVICE_IP checkbox-launcher
+        #EXITCODE=$?
+
+        #collect_artifacts --include checkbox-launcher /tmp/snaplist.txt
+        #exit $EXITCODE
+reserve_data:
+  ssh_keys:
+    - lp:the-meulengracht

@@ -1,0 +1,16 @@
+# This is not a package for Debian.
+canonical-certification-server: new-package-should-close-itp-bug
+# Those are the desired (custom) interpreters
+canonical-certification-server: unusual-interpreter usr/bin/certify-22.04 #!checkbox-cli
+canonical-certification-server: unusual-interpreter usr/bin/certify-20.04 #!checkbox-cli
+canonical-certification-server: unusual-interpreter usr/bin/certify-soc-22.04 #!checkbox-cli
+canonical-certification-server: unusual-interpreter usr/bin/certify-soc-20.04 #!checkbox-cli
+canonical-certification-server: unusual-interpreter usr/bin/certify-vm-22.04 #!checkbox-cli
+canonical-certification-server: unusual-interpreter usr/bin/certify-vm-20.04 #!checkbox-cli
+canonical-certification-server: unusual-interpreter usr/bin/regression-full #!checkbox-cli
+canonical-certification-server: unusual-interpreter usr/bin/test-firmware #!checkbox-cli
+canonical-certification-server: unusual-interpreter usr/bin/test-memory #!checkbox-cli
+canonical-certification-server: unusual-interpreter usr/bin/test-storage #!checkbox-cli
+canonical-certification-server: unusual-interpreter usr/bin/test-stress #!checkbox-cli
+canonical-certification-server: unusual-interpreter usr/bin/test-usb #!checkbox-cli
+canonical-certification-server: unusual-interpreter usr/bin/test-virtualization #!checkbox-cli
