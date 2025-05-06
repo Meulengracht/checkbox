@@ -75,27 +75,48 @@ _purpose:
 unit: template
 template-id: ubuntucore/remodel
 template-resource: ubuntucore/remodels
-template-filter: lsb.distributor_id == 'Ubuntu Core'
+requires: os.distributor_id == 'Ubuntu Core'
 template-unit: job
 plugin: shell
 user: root
 flags: noreturn
 estimated_duration: 300.0
 command:
- snap model | grep "ubuntu-core-{source}"
- remodel_test.py {destination}
- reboot
+  set -e
+  snap model | grep "ubuntu-core-{source}"
+  remodel_test.py {destination}
 
-id: ubuntucore/remodel-check-up
+id: ubuntucore/remodel-reboot-{source}
 category_id: ubuntucore
 _summary: Remodel checkpoint to verify system.
 _purpose:
  Verify the current system status, if the system is up, then we exit cleanly.
-unit: job
+unit: template
+template-id: ubuntucore/remodel-reboot
+template-resource: ubuntucore/remodels
+requires: os.distributor_id == 'Ubuntu Core'
+template-unit: job
 plugin: shell
 user: root
 estimated_duration: 0.1
 command:
+  reboot
+
+id: ubuntucore/remodel-check-up-{source}
+category_id: ubuntucore
+_summary: Remodel checkpoint to verify system.
+_purpose:
+ Verify the current system status, if the system is up, then we exit cleanly.
+unit: template
+template-id: ubuntucore/remodel-check-up
+template-resource: ubuntucore/remodels
+requires: os.distributor_id == 'Ubuntu Core'
+template-unit: job
+plugin: shell
+user: root
+estimated_duration: 0.1
+command:
+  set -e
   cat /proc/cmdline | grep snapd_recovery_mode=run
 
 id: ubuntucore/remodel-{source}-to-{destination}-verify
@@ -104,13 +125,14 @@ _summary: Verify remodel of Ubuntu Core {source} to {destination}
 unit: template
 template-id: ubuntucore/remodel-verify
 template-resource: ubuntucore/remodels
-template-filter: lsb.distributor_id == 'Ubuntu Core'
+requires: os.distributor_id == 'Ubuntu Core'
 template-unit: job
 plugin: shell
 user: root
 estimated_duration: 0.1
 command:
- snap model | grep "ubuntu-core-{destination}"
+  set -e
+  snap model | grep "ubuntu-core-{destination}"
 
 unit: template
 template-resource: lsb
