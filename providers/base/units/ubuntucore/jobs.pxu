@@ -75,28 +75,52 @@ _purpose:
 unit: template
 template-id: ubuntucore/remodel
 template-resource: ubuntucore/remodels
-template-filter: lsb.distributor_id == 'Ubuntu Core'
+requires: os.distributor_id == 'Ubuntu Core'
+template-unit: job
+plugin: shell
+user: root
+flags: noreturn
+estimated_duration: 210.0
+command:
+  set -e
+  snap model
+  snap model | grep "ubuntu-core-{source}"
+  remodel_test.py {destination}
+
+id: ubuntucore/remodel-reboot-{source}
+category_id: ubuntucore
+_summary: Remodel checkpoint to reboot system during remodel.
+_purpose:
+ At this point, the remodel will start, the first reboot was to create a 
+ recovery system and the next will be to start the remodel itself. 
+ This will take a while and do several reboots but not be observed by
+ checkbox 
+unit: template
+template-id: ubuntucore/remodel-reboot
+template-resource: ubuntucore/remodels
+requires: os.distributor_id == 'Ubuntu Core'
 template-unit: job
 plugin: shell
 user: root
 flags: noreturn
 estimated_duration: 300.0
 command:
- snap model | grep "ubuntu-core-{source}"
- remodel_test.py {destination}
- reboot
+  set -e
+  max_attempts=60
+  attempt_num=1
+  success=false
 
-id: ubuntucore/remodel-check-up
-category_id: ubuntucore
-_summary: Remodel checkpoint to verify system.
-_purpose:
- Verify the current system status, if the system is up, then we exit cleanly.
-unit: job
-plugin: shell
-user: root
-estimated_duration: 0.1
-command:
-  cat /proc/cmdline | grep snapd_recovery_mode=run
+  while [ $success = false ] && [ $attempt_num -le $max_attempts ]; do
+    journalctl -b -u snapd | grep "Waiting for system reboot"
+    if [ $? -eq 0 ]; then
+      success=true
+    else
+      echo "Attemp $attempt_num: waiting for reboot request"
+      attempt_num=$(( attempt_num + 1 ))
+      sleep 5
+    fi
+  done
+  reboot
 
 id: ubuntucore/remodel-{source}-to-{destination}-verify
 category_id: ubuntucore
@@ -104,13 +128,19 @@ _summary: Verify remodel of Ubuntu Core {source} to {destination}
 unit: template
 template-id: ubuntucore/remodel-verify
 template-resource: ubuntucore/remodels
-template-filter: lsb.distributor_id == 'Ubuntu Core'
+requires: os.distributor_id == 'Ubuntu Core'
 template-unit: job
 plugin: shell
 user: root
 estimated_duration: 0.1
 command:
- snap model | grep "ubuntu-core-{destination}"
+  set -e
+  cat /proc/cmdline
+  snap model
+  snap changes
+  systemctl is-active ssh
+  cat /proc/cmdline | grep snapd_recovery_mode=run
+  snap model | grep "ubuntu-core-{destination}"
 
 unit: template
 template-resource: lsb
