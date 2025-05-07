@@ -34,6 +34,7 @@ bootstrap_include:
     ubuntucore/remodels
 include:
     ubuntucore/remodel-20-to-22
+    ubuntucore/remodel-reboot-20
     ubuntucore/remodel-check-up-20
     ubuntucore/remodel-20-to-22-verify
 
