@@ -1,0 +1,30 @@
+#!/usr/bin/make -f
+export SRCTOP=providers/certification-server
+
+%:
+	dh $@ --sourcedirectory=$(SRCTOP)
+
+override_dh_auto_clean:
+	python3 $(SRCTOP)/manage.py clean
+	rm -f debian/*.1
+
+override_dh_auto_build:
+	mkdir -p debian/tmp
+	python3 $(SRCTOP)/manage.py build
+	python3 $(SRCTOP)/manage.py i18n --dont-update-pot --dont-merge-po
+
+override_dh_auto_test:
+	python3 $(SRCTOP)/manage.py validate
+
+pkg_name=plainbox-provider-certification-server
+verbose_id=certification-server
+terse_id=$(pkg_name)
+
+override_dh_auto_install:
+	python3 $(SRCTOP)/manage.py install \
+		--prefix=/usr --layout=unix \
+		--root=$(CURDIR)/debian/tmp/
+
+override_dh_gencontrol:
+	python3 $(SRCTOP)/manage.py packaging
+	dh_gencontrol

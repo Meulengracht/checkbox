@@ -1,0 +1,398 @@
+id: led/power
+flags: also-after-suspend
+_summary: Power LED behavior when powered
+_purpose:
+ Check power led is on when system is powered on
+_steps:
+ 1. Check power led when system is powered on
+_verification:
+ Power led is on when system is powered on
+plugin: manual
+category_id: led
+estimated_duration: 15.0
+imports: from com.canonical.plainbox import manifest
+requires:
+ manifest.has_led_power == 'True'
+
+id: led/power-blink-suspend
+_summary: Power LED behavior when suspended
+_purpose:
+ Check power led is blinking when system is in suspend
+_steps:
+ 1. Suspend the system
+ 2. Check power led when system is in suspend
+_verification:
+ Power led is blinking when system is in suspend
+plugin: manual
+category_id: led
+estimated_duration: 180
+imports: from com.canonical.plainbox import manifest
+requires:
+ manifest.has_led_power == 'True'
+
+plugin: manual
+category_id: led
+id: led/suspend
+estimated_duration: 30.0
+imports: from com.canonical.plainbox import manifest
+requires:
+ manifest.has_led_suspend == 'True'
+depends: suspend/suspend_advanced_auto
+_purpose:
+ Suspend LED verification.
+_steps:
+ 1. The Suspend LED should blink or change color while the system is suspended
+_verification:
+ Did the Suspend LED blink or change color while the system was suspended?
+_summary: Verify if the Suspend LED blinks or changes color while the system is suspended.
+
+plugin: manual
+category_id: led
+id: led/battery-charging
+estimated_duration: 120.0
+_purpose:
+    Validate that the battery light shows charging status
+_steps:
+    1. Let system run on battery for a while
+    2. Plug in AC plug
+_verification:
+    Did the battery indicator LED turn orange?
+_summary: Validate battery charging indicator light.
+
+plugin: manual
+category_id: led
+id: led/battery-charged
+estimated_duration: 240.0
+_purpose:
+    Validate that the battery LED properly displays charged status
+_steps:
+    1. Let system run on battery for a short time
+    2. Plug in AC
+    3. Let system run on AC
+_verification:
+    Does the orange battery LED shut off when the system is fully charged?
+_summary: Validate the correct LED indication for battery charged status.
+
+plugin: manual
+category_id: led
+id: led/battery-low
+estimated_duration: 30.0
+_purpose:
+ Validate that the battery LED indicates low power
+_steps:
+ 1. Let system run on battery for several hours
+ 2. Monitor battery LED carefully
+_verification:
+ Does the LED light orange when battery is low?
+_summary: Validate the battery LED's low power indication by monitoring its color change after several hours on battery.
+
+plugin: user-interact-verify
+category_id: led
+id: led/hdd
+estimated_duration: 30.0
+command: led_hdd_test.sh
+_purpose:
+    HDD LED verification
+_steps:
+    1. Select "Test" to write and read a temporary file for a few seconds
+    2. HDD LED should light when writing to/reading from HDD
+_verification:
+    Did the HDD LED light?
+_summary: Verify the HDD LED functionality by writing and reading a temporary file.
+
+plugin: user-interact-verify
+category_id: led
+id: led/numeric-keypad
+flags: also-after-suspend
+estimated_duration: 30.0
+imports: from com.canonical.plainbox import manifest
+requires:
+ manifest.has_led_numeric_keypad == 'True'
+command: keyboard_test.py
+_description:
+_purpose:
+ Numeric keypad LED verification
+_steps:
+ 1. Press "Num Lock" key to toggle numeric keypad LED
+ 2. Click on the "Test" button to open a window to verify your typing
+ 3. Type using the numeric keypad both when the LED is on and off
+_verification:
+ 1. Numeric keypad LED status should toggle every time the "Num Lock" key is pressed
+ 2. Numbers should only be entered in the keyboard verification window when the LED is on
+_summary: Verify the function of the numeric keypad LED by toggling and typing with it.
+
+plugin: manual
+category_id: led
+id: led/caps-lock
+flags: also-after-suspend
+imports: from com.canonical.plainbox import manifest
+requires:
+ manifest.has_led_caps_lock == 'True'
+estimated_duration: 30.0
+_description:
+_purpose:
+ Block Caps Lock key LED verification
+_steps:
+ 1. Press "Caps Lock Key" to activate/deactivate caps lock 
+ 2. Caps Lock LED should be switched on/off every time the key is pressed
+_verification:
+ Did the Caps Lock LED light as expected?
+_summary: Verify the functionality of the Caps Lock LED by pressing the Caps Lock key.
+
+plugin: manual
+category_id: led
+id: led/touchpad
+imports: from com.canonical.plainbox import manifest
+requires:
+ manifest.has_led_touchpad == 'True'
+estimated_duration: 30.0
+_description:
+_purpose:
+ Touchpad LED verification
+_steps:
+ 1. Click on the touchpad button or press key combination to enable/disable touchpad button
+ 2. Slide your finger on the touchpad
+_verification:
+ 1. Touchpad LED status should toggle every time the button is clicked or the key combination is pressed
+ 2. When the LED is on, the mouse pointer should move on touchpad usage
+ 3. When the LED is off, the mouse pointer should not move on touchpad usage
+_summary: Verify touchpad LED functionality through manual button clicks or key combinations and observe pointer movements.
+
+plugin: manual
+category_id: led
+id: led/wireless
+estimated_duration: 120.0
+imports: from com.canonical.plainbox import manifest
+requires:
+ manifest.has_led_wireless == 'True'
+_description:
+_purpose:
+    Wireless (WLAN + Bluetooth) LED verification
+_steps:
+    1. Make sure WLAN connection is established and Bluetooth is enabled.
+    2. WLAN/Bluetooth LED should light
+    3. Switch WLAN and Bluetooth off from a hardware switch (if present)
+    4. Switch them back on
+    5. Switch WLAN and Bluetooth off from the panel applet
+    6. Switch them back on
+_verification:
+    Did the WLAN/Bluetooth LED light as expected?
+_summary: Verify the WLAN/Bluetooth LED functionality by toggling wireless connections.
+
+plugin: manual
+category_id: led
+id: led/mute
+depends: keys/mute
+estimated_duration: 30.0
+imports: from com.canonical.plainbox import manifest
+requires:
+ manifest.has_led_audio_mute == 'True'
+_description:
+_purpose:
+    Audio Mute LED verification.
+_steps:
+    1. Press the Mute key twice and observe the Audio LED to determine if it
+    either turned off and on or changed colors.
+_verification:
+    Did the Audio LED turn on and off or change color as expected?
+flags: also-after-suspend
+_summary: Verify the functionality of the Audio Mute LED.
+
+plugin: manual
+category_id: led
+id: led/microphone-mute
+estimated_duration: 30.0
+imports: from com.canonical.plainbox import manifest
+requires:
+ manifest.has_led_microphone_mute == 'True'
+depends: keys/microphone-mute
+_description:
+_purpose:
+    Microphone Mute LED verification.
+_steps:
+    1. Press the Microphone Mute key twice and observe the Microphone LED to
+    determine if it either turned off and on or changed colors.
+_verification:
+    Did the Microphone Mute LED turn on and off or change color as expected?
+flags: also-after-suspend
+_summary: Verify the functionality of the Microphone Mute LED.
+
+id: led/serial
+_summary: Serial ports LED behavior
+_purpose:
+ Check serial ports LED behavior is correct
+_steps:
+ 1. Start the test to send data to all serial ports (/dev/ttyS*)
+_verification:
+ All serial ports LED are on for a few seconds (3-4s)
+plugin: user-interact-verify
+command: echo {0..1024} | tee /dev/ttyS{0..100} &> /dev/null
+user: root
+category_id: led
+estimated_duration: 15
+imports: from com.canonical.plainbox import manifest
+requires:
+ manifest.has_led_serial == 'True'
+
+plugin: manual
+category_id: led
+id: led/fn
+estimated_duration: 30.0
+imports: from com.canonical.plainbox import manifest
+requires:
+ manifest.has_led_fn_lock == 'True'
+flags: also-after-suspend
+_purpose:
+     This test will test the Fn key LED.
+_steps:
+     1. Press the Fn+Fn Lock key to activate/deactivate Fn keys locking.
+     2. The Fn key LED should be switched on/off every time the key is pressed.
+_verification:
+    Did the Fn key LED light as expected?
+_summary: Test the Fn key LED functionality by activating/deactivating the Fn keys locking.
+
+id: led-indicator/gpio-leds
+plugin: resource
+_summary: Gather a list of LED indicators for the device that controls via GPIO.
+_description:
+    A LED GPIO number mapping resource that relies on the user specifying in config variable.
+    Usage of parameter: GPIO_LEDS={name1}:{port1} {name2}:{port2} ...
+    e.g. GPIO_LEDS=dl1:488 dl2:489 dl44:507
+_purpose:
+    To map LED GPIO numbers based on user configuration for device indicator LEDs.
+estimated_duration: 3
+environ: GPIO_LEDS
+command:
+    awk '{
+        split($0, record, " ")
+        for (i in record) {
+            split(record[i], data, ":")
+            printf "name: %s\nport: %s\n\n", data[1], data[2]
+        }
+    }' <<< "$GPIO_LEDS"
+
+unit: template
+template-resource: led-indicator/gpio-leds
+template-unit: job
+category_id: led
+id: led-indicator/gpio-leds-{name}
+template-id: led-indicator/gpio-leds-name
+estimated_duration: 10
+plugin: user-interact-verify
+user: root
+imports: from com.canonical.plainbox import manifest
+requires: manifest.has_led_gpio_sysfs == 'True'
+flags: also-after-suspend
+_summary: Check control of {name} LED indicator.
+_purpose:
+    Check that {name} LED turns on and off.
+_steps:
+    1. Press Enter and observe LED behavior on DUT.
+_verification:
+    Does the "{name}" LED blink?
+command:
+    led_test.sh -t gpio -n {name} -p {port}
+
+id: led-indicator/sysfs-leds
+plugin: resource
+_summary: Gather a list of LED indicators for the device that control via sysfs path.
+_description:
+    A LED path mapping resource that relies on the user specifying in config variable.
+    Usage of parameter: SYS_LEDS={name1}:{path1} {name2}:{path2} ...
+    path under "/sys/class/leds/{path}"
+    e.g., SYS_LEDS=DL1:beat-yel-led DL2:shutdown-grn-led.
+    Note: make sure name of LED does not include symbol ":".
+estimated_duration: 3
+environ: SYS_LEDS
+command:
+    awk '{
+    split($0, record, " ")
+    for (i in record) {
+        # To handle the situation where the LED path includes symbol ":"
+        # Get the index of the first match ":" in record[i]
+        pos = index(record[i],":");
+        # Split string by matching ":" to get the string before the first ":"
+        printf "name: %s\npath: %s\n\n", substr(record[i],1,pos-1),substr(record[i],pos+1)
+        }
+    }' <<< "$SYS_LEDS"
+
+unit: template
+template-resource: led-indicator/sysfs-leds
+template-unit: job
+template-id: led-indicator/sysfs-leds-manual
+id: led-indicator/sysfs-leds-{name}-manual
+category_id: led
+_summary: Check control of {name} LED.
+_purpose:
+  Check that {name} LED turns on and off.
+_steps:
+    1. Press enter and observe LED behavior on DUT.
+_verification:
+    Does the {name} LED blink?
+plugin: user-interact-verify
+user: root
+flags: also-after-suspend
+estimated_duration: 10
+imports: from com.canonical.plainbox import manifest
+requires: manifest.has_led_gpio_sysfs == 'True'
+command:
+    led_control_test.py -n {path} -d 10
+
+unit: template
+template-resource: led-indicator/sysfs-leds
+template-unit: job
+template-id: led-indicator/sysfs-leds-auto
+id: led-indicator/sysfs-leds-{name}-auto
+category_id: led
+_summary: Automated check control of {name} LED.
+_description:
+  Automated check that {name} LED turns on and off.
+plugin: shell
+user: root
+flags: also-after-suspend
+estimated_duration: 10
+imports: from com.canonical.plainbox import manifest
+requires: manifest.has_led_gpio_sysfs == 'True'
+command:
+    led_control_test.py -n {path} -d 10
+
+id: led-indicator/gpio-controller-leds
+plugin: resource
+_summary: Gather a list of LED indicators for the device that controls via GPIO chip.
+_purpose:
+    A LED GPIO devices mapping resource that relies on the user specifying in config variable.
+    Refer to the /sys/kernel/debug/gpio for the gpiochip number.
+    Usage of parameter: GPIO_CONTROLLER_LEDS={name1}:{controller1}:{port1} {name2}:{controller1}:{port2} ...
+    e.g., GPIO_CONTROLLER_LEDS=dl14:3:1 dl15:3:2 dl16:3:3
+estimated_duration: 3
+environ: GPIO_CONTROLLER_LEDS
+command:
+    gpio_control_test.py led-resource "$GPIO_CONTROLLER_LEDS"
+
+unit: template
+template-resource: led-indicator/gpio-controller-leds
+template-unit: job
+category_id: led
+id: led-indicator/gpio-controller-leds-{name}
+template-id: led-indicator/gpio-controller-leds-name
+estimated_duration: 10
+plugin: user-interact-verify
+user: root
+imports: from com.canonical.plainbox import manifest
+requires: manifest.has_led_gpio_sysfs == 'True'
+flags: also-after-suspend
+_summary: Check control of {name} LED indicator.
+_purpose:
+    Check that {name} LED turns on and off.
+_steps:
+    1. Press Enter and observe LED behavior on DUT.
+_verification:
+    Does the "{name}" LED blink?
+command:
+    if (snap connections | grep "$SNAP_NAME:gpio"); then
+        # the gpio slots has been connected to checkbox, skip the GPIO export steps
+        gpio_control_test.py led -n {name} --gpio-chip {chip_number} --gpio-pin {port}
+    else
+        # the gpio slots has not been connected to checkbox, perform the GPIO export steps during testing
+        gpio_control_test.py led -n {name} --gpio-chip {chip_number} --gpio-pin {port} --need-export
+    fi
