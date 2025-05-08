@@ -12,6 +12,88 @@ import subprocess
 from urllib.request import urlretrieve
 
 
+# the remodel script for checkbox
+remodel_checkbox_script = """#!/bin/bash -e
+
+SOURCE_CHECKBOX_VERSION="$1"
+TARGET_CHECKBOX_VERSION="$2"
+
+# assumptions:
+# checkbox$V must be in /root/checkbox$V.snap
+# checkbox frontend must be in /root/checkbox.snap
+
+# already happened?
+if [ -e "/root/remodel_${TARGET_CHECKBOX_VERSION}.complete" ]; then
+    exit 0
+fi
+
+# ensure remodel completed
+if ! snap model | grep "ubuntu-core-${TARGET_CHECKBOX_VERSION}"; then
+    exit 0
+fi
+
+# remove the old
+snap remove checkbox
+snap remove checkbox${SOURCE_CHECKBOX_VERSION}
+
+# install the checkbox
+snap install --dangerous "/root/checkbox${TARGET_CHECKBOX_VERSION}.snap"
+snap install --dangerous --devmode /root/checkbox.snap
+
+# do connections
+snap connect checkbox:checkbox-runtime  checkbox${TARGET_CHECKBOX_VERSION}:checkbox-runtime
+snap connect checkbox:provider-resource checkbox${TARGET_CHECKBOX_VERSION}:provider-resource
+snap connect checkbox:provider-checkbox checkbox${TARGET_CHECKBOX_VERSION}:provider-checkbox
+snap connect checkbox:provider-docker   checkbox${TARGET_CHECKBOX_VERSION}:provider-docker
+snap connect checkbox:provider-tpm2     checkbox${TARGET_CHECKBOX_VERSION}:provider-tpm2
+snap connect checkbox:provider-sru      checkbox${TARGET_CHECKBOX_VERSION}:provider-sru
+
+# write marker
+touch "/root/remodel_${TARGET_CHECKBOX_VERSION}.complete"
+"""  # noqa: E501
+
+
+def previous_uc_ver(uc_ver):
+    uci = int(uc_ver)
+    return str(uci - 2)
+
+
+def write_remodel_script():
+    with open("/root/remodel-checkbox.sh", "w") as f:
+        f.write(remodel_checkbox_script)
+    os.chmod("/root/remodel-checkbox.sh", 0o700)
+
+
+def write_systemd_service(uc_ver):
+    prev_ver = previous_uc_ver(uc_ver)
+    with open("/etc/systemd/system/remodel-checkbox.service", "w") as f:
+        f.write("[Unit]\n")
+        f.write("Description=Remodel checkbox service\n")
+        f.write("After=snapd.service\n")
+        f.write("Requires=snapd.service\n\n")
+        f.write("[Service]\n")
+        f.write("Type=simple\n")
+        f.write(f"ExecStart=/root/remodel-checkbox.sh {prev_ver} {uc_ver}\n\n")
+        f.write("[Install]\n")
+        f.write("WantedBy=multi-user.target\n")
+
+
+def enable_systemd_service():
+    subprocess.run(
+        [
+            "systemctl",
+            "daemon-reload",
+        ]
+    )
+    subprocess.run(
+        [
+            "systemctl",
+            "enable",
+            "remodel-checkbox.service",
+        ]
+    )
+
+
 def get_platform():
     plt = platform.platform()
     if "raspi-aarch64" in plt:
@@ -88,6 +170,11 @@ def main():
     # resolve the model for the current platform
     model_path = download_model(args.target)
 
+    # prepare checkbox remodel
+    write_remodel_script()
+    write_systemd_service(args.target)
+    enable_systemd_service()
+
     if args.offline:
         download_snaps(args.target)
 
@@ -117,7 +204,7 @@ def main():
     else:
         # instantiate the remodel
         print("initiating device remodel")
-        subprocess.run(["sudo", "snap", "remodel", model_path])
+        #subprocess.run(["sudo", "snap", "remodel", model_path])
 
 
 if __name__ == "__main__":

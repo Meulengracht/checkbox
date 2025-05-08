@@ -109,7 +109,6 @@ command:
   max_attempts=60
   attempt_num=1
   success=false
-
   while [ $success = false ] && [ $attempt_num -le $max_attempts ]; do
     journalctl -b -u snapd | grep "Waiting for system reboot"
     if [ $? -eq 0 ]; then
