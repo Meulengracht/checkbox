@@ -1,0 +1,54 @@
+# Copyright 2017-2024 Canonical Ltd.
+# All rights reserved.
+#
+# Written by:
+#  Sylvain Pineau <sylvain.pineau@canonical.com>
+#  Pierre Equoy <pierre.equoy@canonical.com>
+
+unit: manifest entry
+id: has_audio_playback
+_prompt: Does this machine have the following audio features?
+_name: Audio playback: Machine can emit sound. (For example, a desktop PC probably requires speakers connected to it)
+value-type: bool
+
+unit: manifest entry
+id: has_audio_capture
+_prompt: Does this machine have the following audio features?
+_name: Audio capture: Machine can record sound. (For example, a desktop PC probably requires a microphone connected to it)
+value-type: bool
+
+unit: manifest entry
+id: has_audio_loopback_connector
+_prompt: Does this machine have the following audio features?
+_name: Audio Loopback Connector
+value-type: bool
+
+unit: manifest entry
+id: has_line_out
+_name: Line out (Headphones) port
+_prompt: Does this machine have the following audio features?
+value-type: bool
+
+unit: manifest entry
+id: has_line_in
+_name: Line in (Microphone) port
+_prompt: Does this machine have the following audio features?
+value-type: bool
+
+unit: manifest entry
+id: has_headset
+_name: Headset (Headphones + Microphone) port
+_prompt: Does this machine have the following audio features?
+value-type: bool
+
+unit: manifest entry
+id: has_internal_speakers
+_name: Internal speakers
+_prompt: Does this machine have the following audio features?
+value-type: bool
+
+unit: manifest entry
+id: has_internal_microphone
+_name: Internal microphone
+_prompt: Does this machine have the following audio features?
+value-type: bool

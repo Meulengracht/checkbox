@@ -1,0 +1,99 @@
+plugin: user-interact
+category_id: com.canonical.plainbox::disk
+id: thunderbolt/storage-manual
+flags: also-after-suspend
+user: root
+imports: from com.canonical.plainbox import manifest
+requires: manifest.has_thunderbolt == 'True'
+estimated_duration: 120.0
+command:
+    checkbox-support-run_watcher storage thunderbolt
+_summary: Thunderbolt HDD storage insertion + read/write + removal
+_purpose:
+    This test will check if the connection of a Thunderbolt HDD could be detected,
+    then performs read/write operations on the attached Thunderbolt HDD storage and
+    checks if the removal of the Thunderbolt HDD can be detected.
+_steps:
+    1. Click 'Test' to begin the test. This test will
+       timeout and fail if the insertion has not been detected within 30 seconds.
+    2. Plug a Thunderbolt HDD into an available Thunderbolt port, if it's not
+       mounted automatically, please click the HDD icon to mount it.
+    3. Wait for the read/write operations to complete.
+    4. Press Enter to start the removal test.
+    5. Remove the previously attached Thunderbolt HDD.
+_verification:
+    The verification of this test is automated. Do not change the automatically
+    selected result
+
+plugin: user-interact-verify
+category_id: com.canonical.plainbox::disk
+id: thunderbolt/daisy-chain
+imports: from com.canonical.plainbox import manifest
+requires: manifest.has_thunderbolt == 'True'
+flags: also-after-suspend
+estimated_duration: 45.0
+command: removable_storage_test.py -s 268400000 scsi
+_summary: Daisy-chain testing for Thunderbolt storage and display devices
+_purpose:
+ This test will check if your system can support daisy-chaining of a storage
+ and a monitor over Thunderbolt port
+_steps:
+ 1. Connect your Thunderbolt monitor to your system
+ 2. Connect and mount your Thunderbolt HDD to another Thunderbolt port of the
+    monitor (you can do this with HDD first as well)
+ 3. Click 'Test' to perform the storage test on the Thunderbolt HDD
+_verification:
+ 1. The verification for storage is automated, please select the result combined
+    with the result for the display.
+ 2. Was the desktop displayed correctly on the Thunderbolt-connected screen?
+
+plugin: user-interact
+category_id: com.canonical.plainbox::disk
+id: thunderbolt3/storage-manual
+flags: also-after-suspend
+user: root
+imports: from com.canonical.plainbox import manifest
+requires: manifest.has_thunderbolt3 == 'True'
+estimated_duration: 120.0
+command:
+    checkbox-support-run_watcher storage thunderbolt
+_summary: Thunderbolt 3 HDD storage insertion + read/write + removal
+_purpose:
+    This test will check if the connection of a Thunderbolt 3 HDD could be detected,
+    then performs read/write operations on the attached Thunderbolt 3 HDD storage and
+    checks if the removal of the Thunderbolt 3 HDD can be detected.
+_steps:
+    1. Click 'Test' to begin the test. This test will
+       timeout and fail if the insertion has not been detected within 30 seconds.
+    2. Plug a Thunderbolt 3 HDD into an available Thunderbolt 3 port, if it's not
+       mounted automatically, please click the HDD icon to mount it.
+    3. Wait for the read/write operations to complete.
+    4. Press Enter to start the removal test.
+    5. Remove the previously attached Thunderbolt 3 HDD.
+_verification:
+    The verification of this test is automated. Do not change the automatically
+    selected result
+
+plugin: user-interact-verify
+category_id: com.canonical.plainbox::disk
+id: thunderbolt3/daisy-chain
+user: root
+imports: from com.canonical.plainbox import manifest
+requires: manifest.has_thunderbolt3 == 'True'
+flags: also-after-suspend
+estimated_duration: 45.0
+command: removable_storage_test.py -s 268400000 scsi
+_summary: Daisy-chain testing for Thunderbolt 3 storage and display device
+_description:
+_purpose:
+ This test will check if your system can support daisy-chaining of a storage
+ and a monitor over Thunderbolt 3 port
+_steps:
+ 1. Connect your Thunderbolt monitor to your system
+ 2. Connect and mount your Thunderbolt HDD to another Thunderbolt 3 port of the
+    monitor (you can do this with HDD first as well)
+ 3. Click 'Test' to perform the storage test on the Thunderbolt HDD
+_verification:
+ 1. The verification for storage is automated, please select the result combined
+    with the result for the display.
+ 2. Was the desktop displayed correctly on the Thunderbolt-connected screen?

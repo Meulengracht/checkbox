@@ -1,0 +1,29 @@
+[run]
+branch = True
+source = checkbox_ng,plainbox
+omit =
+    plainbox/vendor/*
+    plainbox/test_*
+    checkbox_ng/test_*
+    plainbox/impl/test_*
+    plainbox/testing_utils/*
+    plainbox/impl/unit/test_*
+    checkbox_ng/launcher/test_*
+    plainbox/impl/secure/test_*
+    plainbox/impl/session/test_*
+    plainbox/impl/commands/test_*
+    plainbox/impl/exporter/test_*
+    checkbox_ng/urwid_ui.py
+    checkbox_ng/resume_menu.py
+
+[report]
+exclude_lines =
+    @abc.abstractmethod
+    @abc.abstractproperty
+    @abstractmethod
+    @abstractproperty
+    @public
+    pragma: no cover
+    raise NotImplementedError
+    if __name__ == .__main__.:
+show_missing = True

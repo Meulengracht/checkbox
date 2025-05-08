@@ -1,0 +1,103 @@
+plugin: user-interact-verify
+category_id: com.canonical.plainbox::hibernate
+id: power-management/hibernate_advanced
+requires:
+  sleep.disk == 'supported'
+  rtc.state == 'supported'
+environ: PLAINBOX_SESSION_SHARE
+user: root
+command:
+ if type -P fwts >/dev/null; then
+  echo "Calling fwts"
+  checkbox-support-fwts_test -l "$PLAINBOX_SESSION_SHARE"/hibernate-single.log -f none -s s4 --s4-device-check --s4-device-check-delay=45 --s4-sleep-delay=120
+ else
+  echo "Calling sleep_test.py"
+  sleep_test.py -s disk -w 120
+ fi
+estimated_duration: 300.00
+_description:
+_purpose:
+ This test will check to make sure your system can successfully hibernate (if supported)
+_steps:
+ 1. Click on Test
+ 2. The system will hibernate and should wake itself within 5 minutes
+ 3. If your system does not wake itself after 5 minutes, please press the power button to wake the system manually
+ 4. If the system fails to resume from hibernate, please restart Checkbox and mark this test as Failed
+_verification:
+ Did the system successfully hibernate and did it work properly after waking up?
+_summary: Test the system's ability to hibernate and wake itself successfully.
+
+plugin: shell
+category_id: com.canonical.plainbox::hibernate
+id: power-management/hibernate_advanced_auto
+requires:
+  sleep.disk == 'supported'
+  rtc.state == 'supported'
+environ: PLAINBOX_SESSION_SHARE
+user: root
+command: checkbox-support-fwts_test -l "$PLAINBOX_SESSION_SHARE"/hibernate-single.log -f none -s s4 --s4-device-check --s4-device-check-delay=45 --s4-sleep-delay=120
+estimated_duration: 300.00
+_purpose: 
+ This is the automated version of suspend/hibernate_advanced.
+_summary: Test the automated suspend/hibernate advanced features.
+
+unit: template
+template-resource: graphics_card
+template-filter: graphics_card.prime_gpu_offload == 'Off'
+requires:
+ sleep.disk == 'supported'
+ rtc.state == 'supported'
+plugin: user-interact-verify
+category_id: com.canonical.plainbox::hibernate
+id: power-management/{index}_hibernate_advanced_{vendor_slug}_{product_slug}
+template-id: power-management/index_hibernate_advanced_vendor_slug_product_slug
+user: root
+environ: PLAINBOX_SESSION_SHARE
+estimated_duration: 300.00
+command:
+ if type -P fwts >/dev/null; then
+  echo "Calling fwts"
+  checkbox-support-fwts_test -l "$PLAINBOX_SESSION_SHARE"/{index}_hibernate-single.log -f none -s s4 --s4-device-check --s4-device-check-delay=45 --s4-sleep-delay=120
+ else
+  echo "Calling sleep_test.py"
+  sleep_test.py -s disk -w 120
+ fi
+_purpose:
+    This test will check to ensure your system can successfully hibernate (if supported)
+_steps:
+    1. Click on Test.
+    2. The system will hibernate and should wake itself within 5 minutes.
+    3. If your system does not wake itself after 5 minutes, please press the power button to wake the system manually.
+    4. If the system fails to resume from hibernate, please restart Checkbox and mark this test as Failed.
+_verification:
+    Did the system successfully hibernate, and did it work properly after waking up?
+_summary: Check the system's ability to hibernate successfully and wake up correctly.
+
+plugin: shell
+category_id: com.canonical.plainbox::hibernate
+id: power-management/hibernate-single-log-check
+command: [ -e "$PLAINBOX_SESSION_SHARE"/hibernate-single.log ] && sleep_test_log_check.py -v --ignore-warning -t all "$PLAINBOX_SESSION_SHARE"/hibernate-single.log
+_purpose: Automated check of the hibernate log for errors discovered by fwts
+_summary: Perform an automated analysis of the hibernate log for errors.
+
+plugin: attachment
+category_id: com.canonical.plainbox::hibernate
+id: power-management/hibernate-single-log-attach
+depends: power-management/hibernate_advanced
+command: [ -e "$PLAINBOX_SESSION_SHARE"/hibernate-single.log ] && cat "$PLAINBOX_SESSION_SHARE"/hibernate-single.log
+estimated_duration: 0.5
+_purpose: attaches log from single hibernate/resume test to results
+_summary: Attach the log from a single hibernate/resume test to the results.
+
+unit: template
+template-resource: graphics_card
+template-filter: graphics_card.prime_gpu_offload == 'Off'
+plugin: attachment
+category_id: com.canonical.plainbox::hibernate
+id: power-management/{index}_hibernate-single-log-attach_{product_slug}
+template-id: power-management/index_hibernate-single-log-attach_product_slug
+depends: power-management/{index}_hibernate_advanced_{vendor_slug}_{product_slug}
+estimated_duration: 0.5
+command: [ -e "$PLAINBOX_SESSION_SHARE"/{index}_hibernate-single.log ] && cat "$PLAINBOX_SESSION_SHARE"/{index}_hibernate-single.log
+_purpose: Attaches log from a single hibernate/resume test to results.
+_summary: Attach log from single hibernate/resume test to results.
