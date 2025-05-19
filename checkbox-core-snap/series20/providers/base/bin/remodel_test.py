@@ -24,17 +24,15 @@ TARGET_CHECKBOX_VERSION="$2"
 
 # already happened?
 if [ -e "/root/remodel_${TARGET_CHECKBOX_VERSION}.complete" ]; then
+    echo "checkbox remodel has completed"
     exit 0
 fi
 
 # ensure remodel completed
 if ! snap model | grep "ubuntu-core-${TARGET_CHECKBOX_VERSION}"; then
+    echo "waiting for remodel to complete"
     exit 0
 fi
-
-# remove the old
-snap remove checkbox
-snap remove checkbox${SOURCE_CHECKBOX_VERSION}
 
 # install the checkbox
 snap install --dangerous "/root/checkbox${TARGET_CHECKBOX_VERSION}.snap"
@@ -47,6 +45,9 @@ snap connect checkbox:provider-checkbox checkbox${TARGET_CHECKBOX_VERSION}:provi
 snap connect checkbox:provider-docker   checkbox${TARGET_CHECKBOX_VERSION}:provider-docker
 snap connect checkbox:provider-tpm2     checkbox${TARGET_CHECKBOX_VERSION}:provider-tpm2
 snap connect checkbox:provider-sru      checkbox${TARGET_CHECKBOX_VERSION}:provider-sru
+
+# remove the old checkbox runtime
+snap remove checkbox${SOURCE_CHECKBOX_VERSION}
 
 # write marker
 touch "/root/remodel_${TARGET_CHECKBOX_VERSION}.complete"
@@ -204,7 +205,7 @@ def main():
     else:
         # instantiate the remodel
         print("initiating device remodel")
-        #subprocess.run(["sudo", "snap", "remodel", model_path])
+        subprocess.run(["sudo", "snap", "remodel", model_path])
 
 
 if __name__ == "__main__":
