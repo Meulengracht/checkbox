@@ -9,7 +9,7 @@ from plainbox.provider_manager import N_
 
 setup(
     name='checkbox-provider-ubuntu-core',
-    namespace='com.canonical.qa.ubuntu-core',
+    namespace='com.canonical.certification',
     version="0.1",
     description=N_("Checkbox Provider for ubuntu-core devices"),
     gettext_domain='checkbox-provider-ubuntu-core',
