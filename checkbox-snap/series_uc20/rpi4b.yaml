@@ -1,0 +1,84 @@
+job_queue: rpi4b8g-002
+provision_data:
+  #url: https://cdimage.ubuntu.com/ubuntu-core/20/dangerous-edge/current/ubuntu-core-20-arm64+raspi.img.xz
+  url: https://cdimage.ubuntu.com/ubuntu-core/22/dangerous-beta/current/ubuntu-core-22-arm64+raspi.img.xz
+test_data:
+  attachments:
+    - local: "checkbox_24.snap"
+      agent: "checkbox.snap"
+  test_cmds: |
+        #!/bin/bash
+
+        # the machine running this script is the test controller
+        # it runs on any device that consumes the jobs on given queue name
+        # the controller has a 1:1 relationship with the DUT (device under test)
+        # to run anything on the DUT, the controller ssh's into the DUT and runs the commands there
+        # and then in the end runs checkbox to run the actual testing session
+        # the checkbox run is a typical remote session where the machine running this script is the
+        # Checkbox Controller and the DUT is the Checkbox Agent
+
+        set -x
+        set -e
+        
+        # please use the version we are remodeling to
+        CHECKBOX_FRONTEND_TRACK="uc24"
+
+        curl -Ls -o install_tools.sh https://raw.githubusercontent.com/canonical/hwcert-jenkins-tools/main/install_tools.sh
+        # install the scriptlets and other tools on the agent and the device, as necessary
+        export TOOLS_PATH=tools
+        source install_tools.sh $TOOLS_PATH
+        wait_for_ssh --allow-degraded
+        wait_for_snap_changes
+        _run wait_for_packages_complete
+        _run clean_machine --im-sure
+
+        # install checkbox
+        install_checkbox_snaps checkbox=$CHECKBOX_FRONTEND_TRACK/edge
+        #_run sudo snap install curl
+        #_run curl "http://bashupload.com/A2cV_/sV963.snap > ~/checkbox24.snap"
+        #_run sudo snap install --dangerous ./checkbox24.snap
+        scp ./attachments/test/*.snap $DEVICE_IP:~
+        _run sudo snap install --dangerous --devmode ./checkbox.snap
+
+        cat <<EOF > checkbox-launcher
+        # Please keep the indents below, for yaml formatting/templating
+        [launcher]
+        launcher_version = 1
+        stock_reports = text, submission_files, certification
+
+        [test plan]
+        unit = com.canonical.qa.ubuntu-core::ubuntucore-22-team
+        forced = yes
+
+        [transport:certification]
+        type = submission-service
+        secure_id = H2YnsiTqP4H7jAsHktsh7Y
+
+        [report:c3_upload]
+        transport = certification
+        exporter = tar
+
+        [test selection]
+        forced = true
+
+        [ui]
+        type = silent
+
+        EOF
+        which envsubst > /dev/null || install_packages --no-update -- gettext > /dev/null
+        if ! fetch_manifest $CID H2YnsiTqP4H7jAsHktsh7Y; then
+            echo "No manifest found for $CID"
+            touch manifest_conf
+        fi
+        stacker --output checkbox-launcher checkbox-launcher manifest_conf
+
+        # run the canary test plan
+        set +e
+        PYTHONUNBUFFERED=1 checkbox-cli control $DEVICE_IP checkbox-launcher
+        EXITCODE=$?
+
+        collect_artifacts --include checkbox-launcher
+        exit $EXITCODE
+reserve_data:
+  ssh_keys:
+    - lp:the-meulengracht
