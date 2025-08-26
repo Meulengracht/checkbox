@@ -107,12 +107,6 @@ user: root
 estimated_duration: 150.0
 command:
   set -e
-  # remodeling from 22-24 switches how ssh works, reenable it
-  # as this is not done automatically
-  systemctl status ssh || true
-  systemctl unmask ssh.service || true
-  systemctl unmask sshd.service || true
-  systemctl enable --now ssh.socket || true
   max_attempts=30
   attempt_num=1
   success=false
