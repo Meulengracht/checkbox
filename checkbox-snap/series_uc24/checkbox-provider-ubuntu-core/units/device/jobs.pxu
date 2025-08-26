@@ -77,6 +77,12 @@ flags: noreturn
 estimated_duration: 300.0
 command:
   set -e
+  # remodeling from 22-24 switches how ssh works, reenable it
+  # as this is not done automatically
+  systemctl status ssh || true
+  systemctl unmask ssh.service || true
+  systemctl unmask sshd.service || true
+  systemctl enable --now ssh.socket || true
   max_attempts=60
   attempt_num=1
   success=false
@@ -90,7 +96,6 @@ command:
       sleep 5
     fi
   done
-  reboot
 
 id: ubuntucore/remodel-{source}-to-{destination}-verify
 category_id: ubuntucore
