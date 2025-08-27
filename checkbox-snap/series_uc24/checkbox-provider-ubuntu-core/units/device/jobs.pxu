@@ -68,6 +68,7 @@ command:
       sleep 0.5
     fi
   done
+  journalctl -b -u snapd
   reboot
 
 id: ubuntucore/remodel-reboot-{source}-second
