@@ -54,6 +54,20 @@ user: root
 flags: noreturn
 estimated_duration: 0.1
 command:
+  set -e
+  max_attempts=300
+  attempt_num=1
+  success=false
+  while [ $success = false ] && [ $attempt_num -le $max_attempts ]; do
+    journalctl -b -u snapd | grep "Waiting for system reboot"
+    if [ $? -eq 0 ]; then
+      success=true
+    else
+      echo "Attemp $attempt_num: waiting for reboot request"
+      attempt_num=$(( attempt_num + 1 ))
+      sleep 0.5
+    fi
+  done
   reboot
 
 id: ubuntucore/remodel-reboot-{source}-second
