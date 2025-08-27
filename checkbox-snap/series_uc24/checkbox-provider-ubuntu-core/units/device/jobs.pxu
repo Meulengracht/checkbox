@@ -78,9 +78,10 @@ estimated_duration: 300.0
 command:
   set -e
   snap changes || true
+  snap change 55 || true
   # remodeling from 22-24 switches how ssh works, reenable it
   # as this is not done automatically
-  max_attempts=60
+  max_attempts=300
   attempt_num=1
   success=false
   while [ $success = false ] && [ $attempt_num -le $max_attempts ]; do
@@ -90,9 +91,10 @@ command:
     else
       echo "Attemp $attempt_num: waiting for reboot request"
       attempt_num=$(( attempt_num + 1 ))
-      sleep 5
+      sleep 0.5
     fi
   done
+  reboot
 
 id: ubuntucore/remodel-{source}-to-{destination}-verify
 category_id: ubuntucore
