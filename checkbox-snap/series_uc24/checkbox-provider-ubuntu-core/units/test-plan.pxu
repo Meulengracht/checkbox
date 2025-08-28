@@ -19,8 +19,8 @@ include:
 
 id: ubuntucore-22-team
 unit: test plan
-_name: Automated tests from the Ubuntu Core Team for Ubuntu Core 20
-_description: Runs automated OS feature tests for Ubuntu Core 20 devices.
+_name: Automated tests from the Ubuntu Core Team for Ubuntu Core 22
+_description: Runs automated OS feature tests for Ubuntu Core 22 devices.
 bootstrap_include:
     com.canonical.certification::os
     ubuntucore/remodels
@@ -28,4 +28,5 @@ include:
     ubuntucore/remodel-22-to-24
     ubuntucore/remodel-reboot-22-first
     ubuntucore/remodel-reboot-22-second
+    ubuntucore/remodel-reboot-22-third
     ubuntucore/remodel-22-to-24-verify
