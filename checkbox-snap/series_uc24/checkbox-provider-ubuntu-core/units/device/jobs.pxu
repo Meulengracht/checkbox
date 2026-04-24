@@ -35,18 +35,6 @@ command:
   snap model
   snap model | grep "ubuntu-core-{source}"
   remodel_test.py {destination}
-  attempt_num=1
-  echo "Waiting for reboot request"
-  while [ $attempt_num -le 900 ]; do
-    journalctl -b -u snapd | grep "Waiting for system reboot"
-    if [ $? -eq 0 ]; then
-      break
-    else
-      attempt_num=$(( attempt_num + 1 ))
-      sleep 1
-    fi
-  done
-  echo "Reboot was requested!"
 
 id: ubuntucore/remodel-reboot-{source}-first
 category_id: ubuntucore
@@ -66,6 +54,18 @@ user: root
 flags: noreturn
 estimated_duration: 0.1
 command:
+  attempt_num=1
+  echo "Waiting for reboot request"
+  while [ $attempt_num -le 900 ]; do
+    journalctl -b -u snapd | grep "Waiting for system reboot"
+    if [ $? -eq 0 ]; then
+      break
+    else
+      attempt_num=$(( attempt_num + 1 ))
+      sleep 1
+    fi
+  done
+  echo "Reboot was requested!"
   reboot
 
 id: ubuntucore/remodel-reboot-{source}-second
@@ -91,6 +91,7 @@ command:
   set -e
   snap changes || true
   snap change 55 || true
+  echo "Waiting for reboot request"
   attempt_num=1
   while [ $attempt_num -le 600 ]; do
     journalctl -b -u snapd | grep "Waiting for system reboot"
@@ -101,6 +102,7 @@ command:
       sleep 0.5
     fi
   done
+  echo "Reboot was requested!"
   reboot
 
 id: ubuntucore/remodel-reboot-{source}-third
@@ -124,6 +126,7 @@ command:
   set -e
   snap changes || true
   snap change 55 || true
+  echo "Waiting for reboot request"
   attempt_num=1
   while [ $attempt_num -le 600 ]; do
     journalctl -b -u snapd | grep "Waiting for system reboot"
@@ -134,6 +137,7 @@ command:
       sleep 0.5
     fi
   done
+  echo "Reboot was requested!"
   reboot
 
 id: ubuntucore/remodel-{source}-to-{destination}-verify
